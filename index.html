@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Lọc & Nhận Coupon Cao Cấp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --gray-bg: #f8fafc;
+            --border: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); 
+            color: var(--text-main); 
+            min-height: 100vh;
+        }
+
+        .container { 
+            max-width: 750px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); 
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .app-header h2 {
+            font-size: 28px;
+            color: var(--dark);
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .app-header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        h3 { 
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark); 
+            margin-top: 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section { 
+            margin-bottom: 30px; 
+            padding: 24px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            background: var(--gray-bg); 
+            transition: all 0.3s ease;
+        }
+        
+        .section-admin {
+            border-left: 4px solid var(--dark);
+            background: #fafafa;
+        }
+        
+        .section-user {
+            border-left: 4px solid var(--primary);
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.03);
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="password"], input[type="datetime-local"] { 
+            width: 100%; 
+            padding: 12px 12px 12px 40px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border); 
+            font-size: 14px; 
+            box-sizing: border-box;
+            background: #fff;
+            color: var(--dark);
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        input:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .admin-flex-row {
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-wrapper {
+            margin: 15px 0;
+        }
+        input[type="file"] {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        input[type="file"]::file-selector-button {
+            background: #e2e8f0;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: var(--dark);
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 10px;
+            transition: 0.2s;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background: #cbd5e1;
+        }
+
+        .label-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        button { 
+            width: 100%;
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            border: none;
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 14px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease; 
+        }
+
+        .btn-admin { background-color: var(--dark); color: white; }
+        .btn-admin:hover { background-color: #1e293b; }
+
+        .product-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .product-title { 
+            font-size: 15px; 
+            font-weight: 700; 
+            color: var(--dark); 
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coupon-list {
+            padding: 8px 16px;
+        }
+
+        .coupon-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 0; 
+            border-bottom: 1px dashed var(--border); 
+        }
+        .coupon-item:last-child { border-bottom: none; }
+
+        .coupon-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px dashed #fcd34d;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-copy { 
+            background-color: var(--success); 
+            color: white; 
+            padding: 6px 14px; 
+            font-size: 13px; 
+            width: auto;
+            border-radius: 6px;
+        }
+        .btn-copy:hover { background-color: var(--success-hover); }
+
+        #adminStatus {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .status-success { color: var(--success); }
+        .status-error { color: var(--danger); }
+
+        .loading-spinner { 
+            color: var(--text-muted); 
+            font-style: italic; 
+            text-align: center;
+            font-size: 13px;
+            margin: 15px 0;
+        }
+        
+        .used-badge {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-header">
+        <h2><i class="fa-solid fa-ticket" style="color: var(--primary);"></i> HỆ THỐNG PHÂN PHỐI COUPON</h2>
+        <p>Tìm kiếm thông minh • Tự động khóa hệ thống khi hết hạn dùng</p>
+    </div>
+
+    <div class="section section-admin">
+        <h3><i class="fa-solid fa-user-shield"></i> Cập nhật kho dữ liệu (Admin)</h3>
+        
+        <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="adminPassword" placeholder="Nhập mật khẩu cấu hình Admin...">
+        </div>
+
+        <div class="admin-flex-row">
+            <label class="label-text"><i class="fa-solid fa-calendar-days"></i> Cài đặt ngày & giờ hết hiệu lực mã (Giờ Việt Nam):</label>
+            <div class="input-group">
+                <i class="fa-solid fa-clock"></i>
+                <input type="datetime-local" id="expireDate">
+            </div>
+        </div>
+        
+        <div class="file-upload-wrapper">
+            <input type="file" id="excelFile" accept=".xlsx, .xls">
+        </div>
+        
+        <button class="btn-admin" onclick="handleUpload()">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên & Thiết Lập Hạn Dùng
+        </button>
+        <div id="adminStatus"></div>
+    </div>
+
+    <div class="section section-user">
+        <h3><i class="fa-solid fa-search"></i> Tra cứu & Nhận Coupon (User)</h3>
+        
+        <div class="input-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="userName" placeholder="Nhập họ tên của bạn trước khi nhận mã..." oninput="validateUser()">
+        </div>
+        
+        <div class="input-group">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchKey" placeholder="Vui lòng điền tên trước khi gõ sản phẩm tìm kiếm..." oninput="searchCoupon()" disabled>
+        </div>
+        
+        <div id="loadingText" class="loading-spinner" style="display:none;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang đồng bộ dữ liệu thời gian thực từ Cloud...
+        </div>
+        
+        <div id="resultArea"></div>
+    </div>
+</div>
+
+<script>
+    // DÁN URL WEB APP APPS SCRIPT CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbxnlrz68NXUUAZ4pt6alk4YRdzvMIwbYMyzVkakwlykDntCxV7npG_BeevogQFln_W4/exec"; 
+    
+    let localData = []; 
+    let isSystemExpired = false;
+    let targetExpireTime = null; // Biến lưu mốc timestamp hết hạn
+
+    window.onload = async function() {
+        await refreshData();
+        
+        // BẮT ĐẦU VÒNG LẶP KIỂM TRA THỜI GIAN THỰC (CỨ 1 GIÂY QUÉT 1 LẦN)
+        setInterval(checkTimeRealtime, 1000);
+    };
+
+    async function refreshData() {
+        showLoading(true);
+        try {
+            let response = await fetch(API_URL);
+            let resultObject = await response.json();
+            
+            localData = resultObject.coupons || [];
+            let cloudExpireDate = resultObject.expireDate || "";
+            isSystemExpired = resultObject.isExpired || false;
+            
+            if (cloudExpireDate) {
+                document.getElementById("expireDate").value = cloudExpireDate;
+                // Chuyển chuỗi định dạng YYYY-MM-DDTHH:mm thành Timestamp cụ thể của Client
+                targetExpireTime = new Date(cloudExpireDate.replace('T', ' ').replace(/-/g, '/')).getTime();
+            } else {
+                targetExpireTime = null;
+            }
+
+            applyLockState();
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu:", error);
+        }
+        showLoading(false);
+    }
+
+    // Hàm quét thời gian thực tại trình duyệt
+    function checkTimeRealtime() {
+        if (targetExpireTime && !isSystemExpired) {
+            let nowTime = new Date().getTime();
+            // Nếu thời gian máy tính hiện tại đã chạm hoặc vượt qua mốc cấu hình hết hạn
+            if (nowTime >= targetExpireTime) {
+                isSystemExpired = true;
+                applyLockState();
+            }
+        }
+    }
+
+    // Hàm thực thi khóa cứng giao diện khi trạng thái isSystemExpired = true
+    function applyLockState() {
+        const userNameInput = document.getElementById("userName");
+        const searchInput = document.getElementById("searchKey");
+        const resultArea = document.getElementById("resultArea");
+
+        if (isSystemExpired) {
+            userNameInput.disabled = true;
+            userNameInput.value = "";
+            userNameInput.placeholder = "HỆ THỐNG ĐÃ KHÓA: Chương trình đã hết hạn!";
+            
+            searchInput.disabled = true;
+            searchInput.value = "";
+            searchInput.placeholder = "Hệ thống đã tự động khóa tra cứu...";
+            
+            resultArea.innerHTML = "<div class='loading-spinner' style='color:var(--danger);font-weight:600;'><i class='fa-solid fa-clock-rotate-left'></i> Chương trình hoặc mã coupon đợt này đã hết hạn hiệu lực! Hệ thống tra cứu đã đóng.</div>";
+        } else {
+            userNameInput.disabled = false;
+            userNameInput.placeholder = "Nhập họ tên của bạn trước khi nhận mã...";
+            validateUser(); 
+        }
+    }
+
+    function showLoading(isLoading) {
+        document.getElementById("loadingText").style.display = isLoading ? "block" : "none";
+    }
+
+    function validateUser() {
+        if (isSystemExpired) return; 
+
+        const userNameInput = document.getElementById("userName");
+        const searchInput = document.getElementById("searchKey");
+        const resultArea = document.getElementById("resultArea");
+        const userName = userNameInput.value.trim();
+
+        if (userName.length > 0) {
+            searchInput.disabled = false;
+            searchInput.placeholder = "Gõ tên sản phẩm cần tìm vào đây...";
+        } else {
+            searchInput.disabled = true;
+            searchInput.value = "";
+            searchInput.placeholder = "Vui lòng điền tên trước khi gõ sản phẩm tìm kiếm...";
+            resultArea.innerHTML = "";
+        }
+    }
+
+    function handleUpload() {
+        const password = document.getElementById("adminPassword").value;
+        const fileInput = document.getElementById("excelFile");
+        const expireDateInput = document.getElementById("expireDate").value; 
+        const statusDiv = document.getElementById("adminStatus");
+
+        if (!password) return alert("Vui lòng điền mật khẩu quản trị!");
+        if (!expireDateInput) return alert("Vui lòng chọn ngày & giờ hết hiệu lực cho tệp dữ liệu này!");
+        if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
+
+        statusDiv.className = "";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang ghi nhận dữ liệu theo múi giờ Việt Nam...";
+        
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            const rawJson = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+            const formData = new URLSearchParams();
+            formData.append("action", "uploadData");
+            formData.append("password", password);
+            formData.append("expireDate", expireDateInput); 
+            formData.append("data", JSON.stringify(rawJson));
+
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: formData.toString()
+            }).then(() => {
+                statusDiv.className = "status-success";
+                statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đã cập nhật kho mã và thiết lập hạn mới! Đang đồng bộ giao diện...";
+                setTimeout(async () => {
+                    await refreshData();
+                    statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Hệ thống đã mở khóa và sẵn sàng hoạt động!";
+                }, 2000);
+            }).catch(err => {
+                statusDiv.className = "status-error";
+                statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối backend: " + err;
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function searchCoupon() {
+        if (isSystemExpired) return;
+
+        const keyword = document.getElementById("searchKey").value.toLowerCase().trim();
+        const resultArea = document.getElementById("resultArea");
+        resultArea.innerHTML = "";
+
+        if (!keyword) return;
+
+        let grouped = {};
+        let hasMatch = false;
+
+        localData.forEach(item => {
+            if (item.productName && item.productName.toLowerCase().includes(keyword) && !item.claimedBy) {
+                if (!grouped[item.productName]) {
+                    grouped[item.productName] = [];
+                }
+                grouped[item.productName].push(item.coupon);
+                hasMatch = true;
+            }
+        });
+
+        if (!hasMatch) {
+            resultArea.innerHTML = "<div class='loading-spinner'>Không tìm thấy coupon nào khả dụng hoặc chưa có ai nhận.</div>";
+            return;
+        }
+
+        for (let prodName in grouped) {
+            let cardDiv = document.createElement("div");
+            cardDiv.className = "product-card";
+            
+            let html = `<div class="product-title"><i class="fa-solid fa-box-open" style="color:var(--text-muted);"></i> ${prodName}</div>`;
+            html += `<div class="coupon-list">`;
+            
+            grouped[prodName].forEach(cp => {
+                html += `
+                    <div class="coupon-item">
+                        <span class="coupon-code">${cp}</span>
+                        <button class="btn-copy" onclick="copyAndClaim('${cp}', this)">
+                            <i class="fa-solid fa-copy"></i> Nhận Mã
+                        </button>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            cardDiv.innerHTML = html;
+            resultArea.appendChild(cardDiv);
+        }
+    }
+
+    async function copyAndClaim(couponCode, buttonEl) {
+        if (isSystemExpired) return alert("Hệ thống đã hết hạn dùng!");
+        
+        const user = document.getElementById("userName").value.trim();
+        if (!user) {
+            alert("Bạn vui lòng điền tên (User) ở ô phía trên trước khi lấy mã nhé!");
+            return;
+        }
+
+        navigator.clipboard.writeText(couponCode).then(async () => {
+            buttonEl.className = "btn-copy";
+            buttonEl.style.backgroundColor = "var(--text-muted)";
+            buttonEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang lưu...";
+            buttonEl.disabled = true;
+
+            try {
+                let res = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "claimCoupon",
+                        coupon: couponCode,
+                        user: user
+                    })
+                });
+                let dataRes = await res.json();
+                
+                if(dataRes.success === false) {
+                    alert(dataRes.message || "Có lỗi xảy ra, mã này có thể đã hết hạn!");
+                    await refreshData();
+                    return;
+                }
+                
+                localData = localData.map(item => {
+                    if (item.coupon === couponCode) {
+                        item.claimedBy = user;
+                    }
+                    return item;
+                });
+                
+                buttonEl.parentElement.innerHTML = `<span class="used-badge"><i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Nhận thành công (Mã đã ẩn với người khác)</span>`;
+
+            } catch (error) {
+                alert("Mã đã copy, nhưng có lỗi đồng bộ hệ thống!");
+            }
+        }).catch(err => {
+            alert("Không thể auto-copy. Hãy bôi đen mã để copy tay.");
+        });
+    }
+</script>
+</body>
+</html>
