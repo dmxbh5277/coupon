@@ -35,7 +35,6 @@
         body { 
             margin: 0; 
             padding: 24px 16px;
-            /* Nền gradient tươi sáng, hiện đại */
             background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); 
             color: var(--text-main); 
             min-height: 100vh;
@@ -55,7 +54,6 @@
             position: relative;
         }
 
-        /* Nút Admin ẩn gọn gàng góc trên bên phải */
         .top-navbar {
             display: flex;
             justify-content: flex-end;
@@ -117,7 +115,6 @@
             gap: 8px;
         }
 
-        /* Khu vực giao diện User */
         .section-user {
             border: 1px solid rgba(2, 132, 199, 0.15); 
             border-radius: 20px; 
@@ -188,7 +185,6 @@
             transition: all 0.2s ease; 
         }
 
-        /* MODAL POPUP DÀNH CHO ADMIN */
         .admin-modal {
             display: none;
             position: fixed;
@@ -258,7 +254,6 @@
             width: 100%;
         }
 
-        /* THIẾT KẾ KẾT QUẢ TÌM KIẾM SẢN PHẨM */
         .product-card {
             background: #ffffff;
             border: 1px solid var(--border);
@@ -336,7 +331,7 @@
             font-size: 13px;
         }
 
-        /* 📱 TỐI ƯU HÓA RỘNG RÃI VÀ THOÁNG TRÊN THIẾT BỊ DI ĐỘNG SMARTPHONE */
+        /* TỐI ƯU HÓA MOBILE */
         @media (max-width: 576px) {
             body {
                 padding: 16px 12px;
@@ -352,17 +347,17 @@
                 padding: 14px 14px 14px 44px;
                 font-size: 14px;
             }
-            /* Trên Mobile, giãn hàng Coupon dọc ra để không bị đè chữ, dễ bấm nút */
+            /* ĐIỀU CHỈNH NÚT NHẬN MÃ NẰM NGANG */
             .coupon-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                padding: 16px 0;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 8px !important;
+                padding: 12px 0 !important;
             }
             .btn-copy {
-                width: 100%;
-                justify-content: center;
-                padding: 12px;
+                width: auto !important;
+                padding: 8px 12px !important;
+                font-size: 12px !important;
             }
             .modal-content {
                 padding: 24px 16px;
@@ -434,7 +429,6 @@
 </div>
 
 <script>
-    // DÁN URL WEB APP APPS SCRIPT CỦA BẠN VÀO ĐÂY
     const API_URL = "https://script.google.com/macros/s/AKfycbxnlrz68NXUUAZ4pt6alk4YRdzvMIwbYMyzVkakwlykDntCxV7npG_BeevogQFln_W4/exec"; 
     
     let localData = []; 
