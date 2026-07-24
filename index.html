@@ -185,6 +185,7 @@
             transition: all 0.2s ease; 
         }
 
+        /* MODAL POPUP DÀNH CHO ADMIN */
         .admin-modal {
             display: none;
             position: fixed;
@@ -200,11 +201,13 @@
         .modal-content {
             background: #ffffff;
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             border-radius: 24px;
             padding: 28px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
             animation: slideUp 0.3s ease;
         }
 
@@ -239,8 +242,106 @@
         .btn-admin { background-color: var(--dark); color: white; }
         .btn-admin:hover { background-color: #0f172a; }
 
+        /* THIẾT KẾ BẢNG THỐNG KÊ ADMIN */
+        .admin-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 18px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--gray-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 4px;
+            line-height: 1.2;
+        }
+
+        .stat-card.remaining .stat-value { color: var(--success); }
+        .stat-card.claimed .stat-value { color: var(--danger); }
+        .stat-card.total .stat-value { color: var(--primary); }
+
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .product-stats-list {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 8px 14px;
+            background: #ffffff;
+        }
+
+        .product-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 13px;
+        }
+
+        .product-stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-stat-name {
+            font-weight: 600;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 65%;
+        }
+
+        /* BADGE THỐNG KÊ KHO */
+        .product-stat-count {
+            font-weight: 700;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        /* Khi CHƯA DÙNG coupon nào (100% còn nguyên) -> Nền xanh nhạt */
+        .product-stat-count.badge-unused {
+            background: var(--primary-light);
+            color: var(--primary-hover);
+        }
+
+        /* Khi ĐÃ CÓ coupon bị sử dụng -> Nền đỏ nhạt, chữ đỏ nổi bật */
+        .product-stat-count.badge-used {
+            background: #ffe4e6;
+            color: #e11d48;
+            border: 1px solid #fecdd3;
+        }
+
         .file-upload-wrapper {
-            margin: 20px 0;
+            margin: 16px 0;
             padding: 16px;
             border: 2px dashed var(--border);
             border-radius: 14px;
@@ -254,6 +355,7 @@
             width: 100%;
         }
 
+        /* THIẾT KẾ KẾT QUẢ TÌM KIẾM SẢN PHẨM */
         .product-card {
             background: #ffffff;
             border: 1px solid var(--border);
@@ -331,38 +433,25 @@
             font-size: 13px;
         }
 
-        /* TỐI ƯU HÓA MOBILE */
         @media (max-width: 576px) {
-            body {
-                padding: 16px 12px;
-            }
-            .container {
-                padding: 24px 16px;
-                border-radius: 20px;
-            }
-            .app-header h2 {
-                font-size: 22px;
-            }
+            body { padding: 16px 12px; }
+            .container { padding: 24px 16px; border-radius: 20px; }
+            .app-header h2 { font-size: 22px; }
             input[type="text"], input[type="password"], input[type="datetime-local"] {
                 padding: 14px 14px 14px 44px;
                 font-size: 14px;
             }
-            /* ĐIỀU CHỈNH NÚT NHẬN MÃ NẰM NGANG */
             .coupon-item {
-                flex-direction: row !important;
-                align-items: center !important;
-                gap: 8px !important;
-                padding: 12px 0 !important;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 16px 0;
             }
-            .btn-copy {
-                width: auto !important;
-                padding: 8px 12px !important;
-                font-size: 12px !important;
-            }
-            .modal-content {
-                padding: 24px 16px;
-                border-radius: 20px;
-            }
+            .btn-copy { width: 100%; justify-content: center; padding: 12px; }
+            .modal-content { padding: 24px 16px; border-radius: 20px; }
+            .stats-grid { gap: 6px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .stat-card .stat-label { font-size: 10px; }
         }
     </style>
 </head>
@@ -401,30 +490,75 @@
     </div>
 </div>
 
+<!-- MODAL CẤU HÌNH ADMIN & THỐNG KÊ -->
 <div id="adminModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
-        <h3><i class="fa-solid fa-user-shield"></i> Cấu hình Hệ thống (Admin)</h3>
         
-        <div class="input-group">
-            <i class="fa-solid fa-lock"></i>
-            <input type="password" id="adminPassword" placeholder="Nhập mật khẩu Admin...">
+        <!-- BƯỚC 1: ĐĂNG NHẬP XÁC THỰC ADMIN -->
+        <div id="adminAuthSection">
+            <h3><i class="fa-solid fa-user-shield"></i> Xác thực Admin</h3>
+            <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="adminPassword" placeholder="Nhập mật khẩu Admin...">
+            </div>
+            <button class="btn-admin" onclick="authenticateAdmin()">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Quyền Admin
+            </button>
+            <div id="authError" class="status-error" style="margin-top: 10px; text-align: center;"></div>
         </div>
 
-        <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
-        <div class="input-group" style="margin-bottom: 10px;">
-            <i class="fa-solid fa-calendar-days"></i>
-            <input type="datetime-local" id="expireDate">
+        <!-- BƯỚC 2: DASHBOARD THỐNG KÊ & TẢI FILE (ẨN KHI CHƯA DĂNG NHẬP) -->
+        <div id="adminDashboardSection" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="margin:0;"><i class="fa-solid fa-chart-pie"></i> Thống Kê Kho Coupon</h3>
+                <button onclick="adminLogout()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #e2e8f0; color: var(--dark); border-radius: 8px;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Thoát
+                </button>
+            </div>
+
+            <!-- CARD THỐNG KÊ TỔNG QUAN -->
+            <div class="stats-grid">
+                <div class="stat-card remaining">
+                    <div class="stat-label">Còn lại (Chưa dùng)</div>
+                    <div class="stat-value" id="statRemaining">0</div>
+                </div>
+                <div class="stat-card claimed">
+                    <div class="stat-label">Đã sử dụng</div>
+                    <div class="stat-value" id="statClaimed">0</div>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-label">Tổng Coupon</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH THỐNG KÊ THEO SẢN PHẨM -->
+            <div class="admin-section-title"><i class="fa-solid fa-boxes-stacked"></i> Thống kê theo sản phẩm</div>
+            <div class="product-stats-list" id="productStatsList">
+                <div style="text-align: center; color: var(--text-muted); padding: 10px;">Chưa có dữ liệu</div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+            <!-- FORM TẢI FILE & CẤU HÌNH -->
+            <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel & Hạn dùng</div>
+
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <i class="fa-solid fa-calendar-days"></i>
+                <input type="datetime-local" id="expireDate">
+            </div>
+            
+            <div class="file-upload-wrapper">
+                <input type="file" id="excelFile" accept=".xlsx, .xls">
+            </div>
+            
+            <button class="btn-admin" onclick="handleUpload()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên & Khóa Hạn Dùng
+            </button>
+            <div id="adminStatus"></div>
         </div>
-        
-        <div class="file-upload-wrapper">
-            <input type="file" id="excelFile" accept=".xlsx, .xls">
-        </div>
-        
-        <button class="btn-admin" onclick="handleUpload()">
-            <i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên & Khóa Hạn Dùng
-        </button>
-        <div id="adminStatus"></div>
     </div>
 </div>
 
@@ -434,6 +568,7 @@
     let localData = []; 
     let isSystemExpired = false;
     let targetExpireTime = null;
+    let isAdminLoggedIn = false;
 
     window.onload = async function() {
         await refreshData();
@@ -442,11 +577,103 @@
 
     function openAdminModal() {
         document.getElementById("adminModal").style.display = "flex";
+        if (isAdminLoggedIn) {
+            updateAdminDashboard();
+        }
     }
 
     function closeAdminModal() {
         document.getElementById("adminModal").style.display = "none";
         document.getElementById("adminStatus").innerHTML = "";
+        document.getElementById("authError").innerHTML = "";
+    }
+
+    /* XÁC THỰC ADMIN */
+    function authenticateAdmin() {
+        const pass = document.getElementById("adminPassword").value.trim();
+        const authError = document.getElementById("authError");
+
+        if (!pass) {
+            authError.innerHTML = "Vui lòng nhập mật khẩu Quản trị!";
+            return;
+        }
+
+        isAdminLoggedIn = true;
+        authError.innerHTML = "";
+        document.getElementById("adminAuthSection").style.display = "none";
+        document.getElementById("adminDashboardSection").style.display = "block";
+        
+        updateAdminDashboard();
+    }
+
+    function adminLogout() {
+        isAdminLoggedIn = false;
+        document.getElementById("adminPassword").value = "";
+        document.getElementById("adminAuthSection").style.display = "block";
+        document.getElementById("adminDashboardSection").style.display = "none";
+    }
+
+    /* TÍNH TOÁN & CẬP NHẬT DASHBOARD ADMIN */
+    function updateAdminDashboard() {
+        if (!isAdminLoggedIn) return;
+
+        let total = localData.length;
+        let claimed = 0;
+        let remaining = 0;
+        let productMap = {};
+
+        localData.forEach(item => {
+            let isClaimed = !!item.claimedBy;
+            if (isClaimed) {
+                claimed++;
+            } else {
+                remaining++;
+            }
+
+            let prodName = item.productName || "Sản phẩm không tên";
+            if (!productMap[prodName]) {
+                productMap[prodName] = { total: 0, remaining: 0, claimed: 0 };
+            }
+            productMap[prodName].total++;
+            if (isClaimed) {
+                productMap[prodName].claimed++;
+            } else {
+                productMap[prodName].remaining++;
+            }
+        });
+
+        // Cập nhật số liệu các thẻ
+        document.getElementById("statTotal").innerText = total;
+        document.getElementById("statRemaining").innerText = remaining;
+        document.getElementById("statClaimed").innerText = claimed;
+
+        // Render danh sách chi tiết theo từng sản phẩm
+        const listContainer = document.getElementById("productStatsList");
+        listContainer.innerHTML = "";
+
+        if (Object.keys(productMap).length === 0) {
+            listContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 10px;">Chưa có dữ liệu Coupon</div>`;
+            return;
+        }
+
+        for (let pName in productMap) {
+            let pData = productMap[pName];
+            let itemDiv = document.createElement("div");
+            itemDiv.className = "product-stat-item";
+            
+            // ĐIỀU KIỆN ĐỔI MÀU: 
+            // Nếu sản phẩm đã có coupon bị sử dụng (claimed > 0) -> dùng màu đỏ (badge-used)
+            // Nếu chưa dùng coupon nào (claimed === 0) -> dùng màu xanh (badge-unused)
+            let badgeStyleClass = (pData.claimed > 0) ? "badge-used" : "badge-unused";
+
+            itemDiv.innerHTML = `
+                <span class="product-stat-name" title="${pName}">${pName}</span>
+                <span class="product-stat-count ${badgeStyleClass}">
+                    Còn lại: <b>${pData.remaining}</b> / ${pData.total}
+                </span>
+            `;
+            listContainer.appendChild(itemDiv);
+        }
     }
 
     async function refreshData() {
@@ -467,6 +694,11 @@
             }
 
             applyLockState();
+            
+            // Cập nhật lại số liệu realtime nếu panel đang mở
+            if (isAdminLoggedIn) {
+                updateAdminDashboard();
+            }
 
         } catch (error) {
             console.error("Lỗi tải dữ liệu:", error);
@@ -670,6 +902,10 @@
                     }
                     return item;
                 });
+
+                if (isAdminLoggedIn) {
+                    updateAdminDashboard();
+                }
                 
                 buttonEl.parentElement.innerHTML = `<span class="used-badge"><i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Nhận thành công</span>`;
 
