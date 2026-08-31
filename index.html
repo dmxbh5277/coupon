@@ -318,7 +318,7 @@
             max-width: 65%;
         }
 
-        /* BADGE THỐNG KÊ KHO & CODE */
+        /* BADGE THỐNG KÊ KHO */
         .product-stat-count {
             font-weight: 700;
             font-size: 12px;
@@ -326,45 +326,6 @@
             border-radius: 8px;
             transition: all 0.2s ease;
         }
-
-        .code-badge {
-            font-family: monospace;
-            font-weight: 700;
-            background: #f1f5f9;
-            color: var(--primary);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-            font-size: 13px;
-        }
-
-        .btn-mini-copy {
-            background: var(--success);
-            color: #ffffff;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .btn-mini-copy:hover { background: var(--success-hover); }
-
-        .btn-mini-delete {
-            background: var(--danger);
-            color: #ffffff;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .btn-mini-delete:hover { background: #e11d48; }
 
         .product-stat-count.badge-unused {
             background: var(--primary-light);
@@ -473,7 +434,6 @@
             font-size: 13px;
         }
 
-        /* ĐIỀU CHỈNH RIÊNG CHO ĐIỆN THOẠI (MOBILE) */
         @media (max-width: 576px) {
             body { padding: 16px 12px; }
             .container { padding: 20px 14px; border-radius: 20px; }
@@ -525,17 +485,13 @@
         <h3><i class="fa-solid fa-search"></i> Tra cứu & Nhận Coupon</h3>
         
         <div class="input-group">
-            <i class="fa-solid fa-key"></i>
-            <input type="text" id="userCode" placeholder="Nhập Mã bảo mật..." oninput="validateUserCode()">
-        </div>
-
-        <div id="userInfoBadge" style="font-size: 13px; font-weight: 600; color: var(--primary-hover); margin-top: -10px; margin-bottom: 14px; display: none;">
-            <i class="fa-solid fa-circle-user"></i> Tài khoản: <span id="displayUserName"></span>
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="userName" placeholder="Nhập User..." oninput="validateUser()">
         </div>
         
         <div class="input-group">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchKey" placeholder="Vui lòng nhập Mã bảo mật hợp lệ..." oninput="searchCoupon()" disabled>
+            <input type="text" id="searchKey" placeholder="Vui lòng điền tên trước khi tìm sản phẩm..." oninput="searchCoupon()" disabled>
         </div>
         
         <div id="loadingText" class="loading-spinner" style="display:none;">
@@ -564,7 +520,7 @@
             <div id="authError" class="status-error" style="margin-top: 10px; text-align: center;"></div>
         </div>
 
-        <!-- BƯỚC 2: DASHBOARD THỐNG KÊ, CẤP USER & TẢI FILE -->
+        <!-- BƯỚC 2: DASHBOARD THỐNG KÊ & TẢI FILE -->
         <div id="adminDashboardSection" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin:0;"><i class="fa-solid fa-chart-pie"></i> Thống Kê Kho Coupon</h3>
@@ -588,22 +544,6 @@
                     <div class="stat-value" id="statTotal">0</div>
                 </div>
             </div>
-
-            <!-- CẤP USER SỬ DỤNG -->
-            <div class="admin-section-title"><i class="fa-solid fa-user-plus"></i> Cấp User sử dụng</div>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <i class="fa-solid fa-user-tag"></i>
-                <input type="text" id="adminNewUser" placeholder="Nhập tên User mới (VD: NguyenVanA)...">
-            </div>
-            <button class="btn-admin" onclick="generateUserCode()" style="margin-bottom: 12px; background-color: var(--primary);">
-                <i class="fa-solid fa-key"></i> Tạo Code
-            </button>
-
-            <div class="product-stats-list" id="userCodesList" style="max-height: 150px; margin-bottom: 16px;">
-                <div style="text-align: center; color: var(--text-muted); padding: 10px;">Chưa có mã bảo mật nào</div>
-            </div>
-
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
             <!-- DANH SÁCH THỐNG KÊ THEO SẢN PHẨM -->
             <div class="admin-section-title"><i class="fa-solid fa-boxes-stacked"></i> Thống kê theo sản phẩm</div>
@@ -638,8 +578,6 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxnlrz68NXUUAZ4pt6alk4YRdzvMIwbYMyzVkakwlykDntCxV7npG_BeevogQFln_W4/exec"; 
     
     let localData = []; 
-    let userCodes = []; 
-    let currentMatchedUser = ""; 
     let isSystemExpired = false;
     let targetExpireTime = null;
     let isAdminLoggedIn = false;
@@ -687,127 +625,9 @@
         document.getElementById("adminDashboardSection").style.display = "none";
     }
 
-    /* TẠO VÀ QUẢN LÝ MÃ BẢO MẬT (CODE) DÀNH CHO USER */
-    function generateRandomCode(length = 6) {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        let result = "";
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return "SEC-" + result;
-    }
-
-    async function generateUserCode() {
-        const userInput = document.getElementById("adminNewUser");
-        const userName = userInput.value.trim();
-
-        if (!userName) {
-            alert("Vui lòng nhập tên User!");
-            return;
-        }
-
-        const newCode = generateRandomCode(6);
-        const newUserObj = { 
-            user: userName, 
-            code: newCode, 
-            createdAt: new Date().toLocaleDateString("vi-VN") 
-        };
-
-        userCodes.unshift(newUserObj);
-        localStorage.setItem("app_user_codes", JSON.stringify(userCodes));
-
-        try {
-            const password = document.getElementById("adminPassword").value;
-            const formData = new URLSearchParams();
-            formData.append("action", "saveUserCodes");
-            formData.append("password", password);
-            formData.append("userCodes", JSON.stringify(userCodes));
-
-            fetch(API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: formData.toString()
-            });
-        } catch(e) {
-            console.error("Lỗi lưu trữ user code:", e);
-        }
-
-        renderUserCodesList();
-        userInput.value = "";
-        alert(`Đã tạo thành công Mã bảo mật cho User "${userName}": ${newCode}`);
-    }
-
-    /* XÓA USER / MÃ BẢO MẬT */
-    async function deleteUserCode(codeToDelete) {
-        if (!confirm("Bạn có chắc chắn muốn xóa Mã bảo mật này không?")) return;
-
-        userCodes = userCodes.filter(u => u.code !== codeToDelete);
-        localStorage.setItem("app_user_codes", JSON.stringify(userCodes));
-
-        try {
-            const password = document.getElementById("adminPassword").value;
-            const formData = new URLSearchParams();
-            formData.append("action", "saveUserCodes");
-            formData.append("password", password);
-            formData.append("userCodes", JSON.stringify(userCodes));
-
-            fetch(API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: formData.toString()
-            });
-        } catch(e) {
-            console.error("Lỗi xóa user code:", e);
-        }
-
-        renderUserCodesList();
-    }
-
-    function renderUserCodesList() {
-        const listContainer = document.getElementById("userCodesList");
-        if (!listContainer) return;
-        listContainer.innerHTML = "";
-
-        if (!userCodes || userCodes.length === 0) {
-            listContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 10px;">Chưa có mã bảo mật nào</div>`;
-            return;
-        }
-
-        userCodes.forEach(u => {
-            let itemDiv = document.createElement("div");
-            itemDiv.className = "product-stat-item";
-            itemDiv.innerHTML = `
-                <div>
-                    <strong style="color: var(--dark);">${u.user}</strong>
-                    <div style="font-size: 11px; color: var(--text-muted);">${u.createdAt || ''}</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="code-badge">${u.code}</span>
-                    <button class="btn-mini-copy" onclick="copyToClipboard('${u.code}')" title="Sao chép Mã">
-                        <i class="fa-solid fa-copy"></i>
-                    </button>
-                    <button class="btn-mini-delete" onclick="deleteUserCode('${u.code}')" title="Xóa User">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            listContainer.appendChild(itemDiv);
-        });
-    }
-
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Đã sao chép mã bảo mật: " + text);
-        });
-    }
-
     /* TÍNH TOÁN & CẬP NHẬT DASHBOARD ADMIN */
     function updateAdminDashboard() {
         if (!isAdminLoggedIn) return;
-
-        renderUserCodesList();
 
         let total = localData.length;
         let claimed = 0;
@@ -865,23 +685,11 @@
 
     async function refreshData() {
         showLoading(true);
-
-        try {
-            const stored = localStorage.getItem("app_user_codes");
-            if (stored) userCodes = JSON.parse(stored);
-        } catch(e){}
-
         try {
             let response = await fetch(API_URL);
             let resultObject = await response.json();
             
             localData = resultObject.coupons || [];
-
-            if (resultObject.userCodes && Array.isArray(resultObject.userCodes)) {
-                userCodes = resultObject.userCodes;
-                localStorage.setItem("app_user_codes", JSON.stringify(userCodes));
-            }
-
             let cloudExpireDate = resultObject.expireDate || "";
             isSystemExpired = resultObject.isExpired || false;
             
@@ -915,16 +723,14 @@
     }
 
     function applyLockState() {
-        const userCodeInput = document.getElementById("userCode");
+        const userNameInput = document.getElementById("userName");
         const searchInput = document.getElementById("searchKey");
         const resultArea = document.getElementById("resultArea");
 
         if (isSystemExpired) {
-            if (userCodeInput) {
-                userCodeInput.disabled = true;
-                userCodeInput.value = "";
-                userCodeInput.placeholder = "HỆ THỐNG ĐÃ KHÓA: Chương trình đã hết hạn!";
-            }
+            userNameInput.disabled = true;
+            userNameInput.value = "";
+            userNameInput.placeholder = "HỆ THỐNG ĐÃ KHÓA: Chương trình đã hết hạn!";
             
             searchInput.disabled = true;
             searchInput.value = "";
@@ -932,11 +738,9 @@
             
             resultArea.innerHTML = "<div class='loading-spinner' style='color:var(--danger);font-weight:600;'><i class='fa-solid fa-clock-rotate-left'></i> Đợt nhận coupon này đã kết thúc! Hệ thống tra cứu đã tự động khóa.</div>";
         } else {
-            if (userCodeInput) {
-                userCodeInput.disabled = false;
-                userCodeInput.placeholder = "Nhập Mã bảo mật...";
-            }
-            validateUserCode(); 
+            userNameInput.disabled = false;
+            userNameInput.placeholder = "Nhập User...";
+            validateUser(); 
         }
     }
 
@@ -944,35 +748,21 @@
         document.getElementById("loadingText").style.display = isLoading ? "block" : "none";
     }
 
-    /* KIỂM TRA MÃ BẢO MẬT USER NHẬP */
-    function validateUserCode() {
-        if (isSystemExpired) return;
+    function validateUser() {
+        if (isSystemExpired) return; 
 
-        const codeInput = document.getElementById("userCode");
+        const userNameInput = document.getElementById("userName");
         const searchInput = document.getElementById("searchKey");
         const resultArea = document.getElementById("resultArea");
-        const infoBadge = document.getElementById("userInfoBadge");
-        const displayUserName = document.getElementById("displayUserName");
+        const userName = userNameInput.value.trim();
 
-        const inputCode = codeInput.value.trim().toUpperCase();
-
-        const matched = userCodes.find(u => u.code.toUpperCase() === inputCode);
-
-        if (matched) {
-            currentMatchedUser = matched.user;
-            if (displayUserName) displayUserName.innerText = matched.user;
-            if (infoBadge) infoBadge.style.display = "block";
-
+        if (userName.length > 0) {
             searchInput.disabled = false;
             searchInput.placeholder = "Gõ tên sản phẩm cần tìm...";
-            searchCoupon();
         } else {
-            currentMatchedUser = "";
-            if (infoBadge) infoBadge.style.display = "none";
-
             searchInput.disabled = true;
             searchInput.value = "";
-            searchInput.placeholder = "Vui lòng nhập Mã bảo mật hợp lệ...";
+            searchInput.placeholder = "Vui lòng điền tên trước khi tìm sản phẩm...";
             resultArea.innerHTML = "";
         }
     }
@@ -1080,35 +870,34 @@
         }
     }
 
-    /* TỐI ƯU HÓA ĐẶC TRỊ CHO IOS (OPTIMISTIC UI + BACKGROUND SYNC) */
+    /* TỐI ƯU HOÁ TỨC THÌ (OPTIMISTIC UI & BACKGROUND TASK CHO IOS) */
     function copyAndClaim(couponCode, buttonEl) {
         if (isSystemExpired) return alert("Hệ thống đã hết hạn!");
         
-        if (!currentMatchedUser) {
-            alert("Vui lòng nhập Mã bảo mật hợp lệ trước khi nhận mã!");
+        const user = document.getElementById("userName").value.trim();
+        if (!user) {
+            alert("Vui lòng điền tên trước khi nhận mã!");
             return;
         }
 
-        // 1. SAO CHÉP MÃ TỨC THÌ TRONG LUỒNG ĐỒNG BỘ (TRÁNH XUNG ĐỘT SAFARI IOS)
+        // 1. SAO CHÉP TỨC THÌ VÀO CLIPBOARD (Được kích hoạt ngay trong User Gesture của iOS)
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(couponCode).catch(() => {});
+            navigator.clipboard.writeText(couponCode).catch(() => {
+                fallbackCopyTextToClipboard(couponCode);
+            });
         } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = couponCode;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try { document.execCommand('copy'); } catch (err) {}
-            document.body.removeChild(textArea);
+            fallbackCopyTextToClipboard(couponCode);
         }
 
-        // 2. PHẢN HỒI GIAO DIỆN LẬP TỨC TRONG < 0.05 GiÂY (OPTIMISTIC UI)
+        // 2. OPTIMISTIC UI: Cập nhật giao diện & state local TỨC THÌ (< 0.05s)
         const parentEl = buttonEl.parentElement;
         const originalContent = parentEl.innerHTML;
 
-        // Cập nhật dữ liệu nội bộ lập tức
+        parentEl.innerHTML = `<span class="used-badge"><i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Nhận thành công</span>`;
+
         localData = localData.map(item => {
             if (item.coupon === couponCode) {
-                item.claimedBy = currentMatchedUser;
+                item.claimedBy = user;
             }
             return item;
         });
@@ -1117,37 +906,49 @@
             updateAdminDashboard();
         }
 
-        parentEl.innerHTML = `<span class="used-badge"><i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Nhận thành công</span>`;
-
-        // 3. ĐẨY TIẾN TRÌNH LƯU TRỰC TUYẾN SANG LUỒNG CHẠY NGẦM (NON-BLOCKING BACKGROUND FETCH)
+        // 3. BACKGROUND TASK: Đẩy dữ liệu lưu trữ về Google Sheet bất đồng bộ
         fetch(API_URL, {
             method: "POST",
-            keepalive: true,
             body: JSON.stringify({
                 action: "claimCoupon",
                 coupon: couponCode,
-                user: currentMatchedUser
+                user: user
             })
         })
         .then(res => res.json())
         .then(dataRes => {
-            // Trường hợp lỗi ngầm từ Google Sheet: Khôi phục lại giao diện và thông báo
             if (dataRes.success === false) {
-                alert(dataRes.message || "Không thể nhận mã này!");
-                localData = localData.map(item => {
-                    if (item.coupon === couponCode) {
-                        item.claimedBy = "";
-                    }
-                    return item;
-                });
+                alert(dataRes.message || "Không thể đồng bộ với máy chủ!");
+                // Rollback nếu có lỗi nghiệp vụ từ Google Sheet
                 parentEl.innerHTML = originalContent;
-                if (isAdminLoggedIn) updateAdminDashboard();
                 refreshData();
             }
         })
-        .catch(err => {
-            console.error("Lỗi đồng bộ ngầm:", err);
+        .catch(error => {
+            console.error("Lỗi đồng bộ ngầm:", error);
+            alert("Lỗi mạng khi lưu dữ liệu ngầm! Đang tải lại dữ liệu...");
+            // Rollback nếu gặp lỗi đường truyền
+            parentEl.innerHTML = originalContent;
+            refreshData();
         });
+    }
+
+    /* Dynamic Fallback dành cho thiết bị iOS Safari cũ */
+    function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Lỗi sao chép thủ công:', err);
+        }
+        document.body.removeChild(textArea);
     }
 </script>
 </body>
