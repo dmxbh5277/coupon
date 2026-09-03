@@ -56,10 +56,11 @@
 
         .top-navbar {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             margin-bottom: 20px;
             width: 100%;
             max-width: 680px;
+            gap: 10px;
         }
 
         .btn-toggle-admin {
@@ -145,7 +146,7 @@
             display: block;
         }
 
-        input[type="text"], input[type="password"], input[type="datetime-local"] { 
+        input[type="text"], input[type="password"], input[type="datetime-local"], textarea { 
             width: 100%; 
             padding: 14px 14px 14px 46px; 
             border-radius: 14px; 
@@ -157,7 +158,14 @@
             transition: all 0.2s ease;
         }
 
-        input:focus {
+        textarea {
+            padding: 12px 14px;
+            font-family: monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        input:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
             background: #ffffff;
@@ -185,7 +193,6 @@
             transition: all 0.2s ease; 
         }
 
-        /* MODAL POPUP DÀNH CHO ADMIN */
         .admin-modal {
             display: none;
             position: fixed;
@@ -201,7 +208,7 @@
         .modal-content {
             background: #ffffff;
             width: 100%;
-            max-width: 520px;
+            max-width: 540px;
             border-radius: 24px;
             padding: 28px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
@@ -242,7 +249,13 @@
         .btn-admin { background-color: var(--dark); color: white; }
         .btn-admin:hover { background-color: #0f172a; }
 
-        /* THIẾT KẾ BẢNG THỐNG KÊ ADMIN */
+        .btn-secondary {
+            background-color: var(--primary);
+            color: white;
+            margin-top: 8px;
+        }
+        .btn-secondary:hover { background-color: var(--primary-hover); }
+
         .admin-section-title {
             font-size: 13px;
             font-weight: 700;
@@ -318,13 +331,13 @@
             max-width: 65%;
         }
 
-        /* BADGE THỐNG KÊ KHO */
         .product-stat-count {
             font-weight: 700;
             font-size: 12px;
             padding: 4px 10px;
             border-radius: 8px;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .product-stat-count.badge-unused {
@@ -339,8 +352,8 @@
         }
 
         .file-upload-wrapper {
-            margin: 16px 0;
-            padding: 16px;
+            margin: 10px 0;
+            padding: 14px;
             border: 2px dashed var(--border);
             border-radius: 14px;
             text-align: center;
@@ -348,12 +361,11 @@
         }
         
         input[type="file"] {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-muted);
             width: 100%;
         }
 
-        /* THIẾT KẾ KẾT QUẢ TÌM KIẾM SẢN PHẨM */
         .product-card {
             background: #ffffff;
             border: 1px solid var(--border);
@@ -411,7 +423,7 @@
         }
         .btn-copy:hover { background-color: var(--success-hover); }
 
-        #adminStatus {
+        #adminStatus, #textStatus {
             margin-top: 14px;
             font-size: 13px;
             font-weight: 500;
@@ -464,25 +476,31 @@
             .stats-grid { gap: 6px; }
             .stat-card .stat-value { font-size: 18px; }
             .stat-card .stat-label { font-size: 10px; }
+
+            .top-navbar { flex-wrap: wrap; }
+            .top-navbar .btn-toggle-admin { font-size: 13px; padding: 8px 12px; }
         }
     </style>
 </head>
 <body>
 
 <div class="top-navbar">
+    <button class="btn-toggle-admin" onclick="openTextModal()">
+        <i class="fa-solid fa-paste"></i> LỌC VÀ UPDATE PMH
+    </button>
     <button class="btn-toggle-admin" onclick="openAdminModal()">
-        <i class="fa-solid fa-user-gear"></i> Admin
+        <i class="fa-solid fa-chart-pie"></i> THỐNG KÊ
     </button>
 </div>
 
 <div class="container">
     <div class="app-header">
-        <h2><i class="fa-solid fa-ticket" style="color: var(--primary);"></i> COUPON, PMH GVGS_EVENT</h2>
-        <p>Coupon, PMH các Sản phẩm GVGS - Event</p>
+        <h2><i class="fa-solid fa-ticket" style="color: var(--primary);"></i> COUPON, PMH VÙNG, PMH GVGS_EVENT</h2>
+        <p>Coupon, PMH Vùng và PMH các Sản phẩm GVGS - Event</p>
     </div>
 
     <div class="section-user">
-        <h3><i class="fa-solid fa-search"></i> Tra cứu & Nhận Coupon</h3>
+        <h3><i class="fa-solid fa-search"></i> Tra cứu & Nhận Coupon, PMH</h3>
         
         <div class="input-group">
             <i class="fa-solid fa-user"></i>
@@ -502,37 +520,43 @@
     </div>
 </div>
 
-<!-- MODAL CẤU HÌNH ADMIN & THỐNG KÊ -->
+<!-- MODAL BỔ SUNG COUPON DẠNG TEXT (TÍCH HỢP BỘ LỌC DM) -->
+<div id="textModal" class="admin-modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeTextModal()"><i class="fa-solid fa-xmark"></i></button>
+        <h3><i class="fa-solid fa-paste"></i> Lọc & Bổ Sung PMH Vùng </h3>
+        
+        <label class="input-label"><i class="fa-solid fa-filter"></i> Từ khóa Lọc User QL/TC (phân cách bằng dấu phẩy):</label>
+        <div class="input-group" style="margin-bottom: 12px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="filterKeywords" placeholder="Ví dụ: 53136, Vủ..." oninput="saveFilterKeywords()">
+        </div>
+
+        <label class="input-label"><i class="fa-solid fa-database"></i> Dán dữ liệu tin nhắn thô từ DM hoặc danh sách PMH:</label>
+        <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây hoặc mã mẫu:&#10;➜ PMH ICT100 : D9N97EB3V9&#10;➜ PMH MM200 : 1ZXD4O9PI0"></textarea>
+        
+        <button class="btn-secondary" onclick="handleImportTextCoupons()">
+            <i class="fa-solid fa-filter-circle-dollar"></i> Lọc Theo User & Bổ Sung Mã Vào Sheet
+        </button>
+        <div id="textStatus"></div>
+    </div>
+</div>
+
+<!-- MODAL CẤU HÌNH & THỐNG KÊ -->
 <div id="adminModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
         
-        <!-- BƯỚC 1: ĐĂNG NHẬP XÁC THỰC ADMIN -->
-        <div id="adminAuthSection">
-            <h3><i class="fa-solid fa-user-shield"></i> Xác thực Admin</h3>
-            <div class="input-group">
-                <i class="fa-solid fa-lock"></i>
-                <input type="password" id="adminPassword" placeholder="Nhập mật khẩu Admin...">
-            </div>
-            <button class="btn-admin" onclick="authenticateAdmin()">
-                <i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập Quyền Admin
-            </button>
-            <div id="authError" class="status-error" style="margin-top: 10px; text-align: center;"></div>
-        </div>
-
-        <!-- BƯỚC 2: DASHBOARD THỐNG KÊ & TẢI FILE -->
-        <div id="adminDashboardSection" style="display: none;">
+        <!-- DASHBOARD THỐNG KÊ & TẢI FILE EXCEL -->
+        <div id="adminDashboardSection">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin:0;"><i class="fa-solid fa-chart-pie"></i> Thống Kê Kho Coupon</h3>
-                <button onclick="adminLogout()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #e2e8f0; color: var(--dark); border-radius: 8px;">
-                    <i class="fa-solid fa-right-from-bracket"></i> Thoát
-                </button>
             </div>
 
             <!-- CARD THỐNG KÊ TỔNG QUAN -->
             <div class="stats-grid">
                 <div class="stat-card remaining">
-                    <div class="stat-label">Còn lại (Chưa dùng)</div>
+                    <div class="stat-label">Còn lại</div>
                     <div class="stat-value" id="statRemaining">0</div>
                 </div>
                 <div class="stat-card claimed">
@@ -553,8 +577,8 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-            <!-- FORM TẢI FILE & CẤU HÌNH -->
-            <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel & Hạn dùng</div>
+            <!-- FORM TẢI FILE EXCEL & CẤU HÌNH HẠN DÙNG (SHEET 1) -->
+            <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel gốc & Hạn dùng</div>
 
             <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
             <div class="input-group" style="margin-bottom: 10px;">
@@ -567,7 +591,7 @@
             </div>
             
             <button class="btn-admin" onclick="handleUpload()">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên & Khóa Hạn Dùng
+                <i class="fa-solid fa-cloud-arrow-up"></i> Tải File Excel Gốc
             </button>
             <div id="adminStatus"></div>
         </div>
@@ -580,55 +604,41 @@
     let localData = []; 
     let isSystemExpired = false;
     let targetExpireTime = null;
-    let isAdminLoggedIn = false;
 
     window.onload = async function() {
         await refreshData();
         setInterval(checkTimeRealtime, 1000);
     };
 
+    function openTextModal() {
+        document.getElementById("textModal").style.display = "flex";
+        const tuKhoaDaLuu = localStorage.getItem('tuKhoaPMH_Backup');
+        if (tuKhoaDaLuu) {
+            document.getElementById('filterKeywords').value = tuKhoaDaLuu;
+        }
+    }
+
+    function saveFilterKeywords() {
+        const tuKhoaRaw = document.getElementById('filterKeywords').value;
+        localStorage.setItem('tuKhoaPMH_Backup', tuKhoaRaw);
+    }
+
+    function closeTextModal() {
+        document.getElementById("textModal").style.display = "none";
+        document.getElementById("textStatus").innerHTML = "";
+    }
+
     function openAdminModal() {
         document.getElementById("adminModal").style.display = "flex";
-        if (isAdminLoggedIn) {
-            updateAdminDashboard();
-        }
+        updateAdminDashboard();
     }
 
     function closeAdminModal() {
         document.getElementById("adminModal").style.display = "none";
         document.getElementById("adminStatus").innerHTML = "";
-        document.getElementById("authError").innerHTML = "";
     }
 
-    /* XÁC THỰC ADMIN */
-    function authenticateAdmin() {
-        const pass = document.getElementById("adminPassword").value.trim();
-        const authError = document.getElementById("authError");
-
-        if (!pass) {
-            authError.innerHTML = "Vui lòng nhập mật khẩu Quản trị!";
-            return;
-        }
-
-        isAdminLoggedIn = true;
-        authError.innerHTML = "";
-        document.getElementById("adminAuthSection").style.display = "none";
-        document.getElementById("adminDashboardSection").style.display = "block";
-        
-        updateAdminDashboard();
-    }
-
-    function adminLogout() {
-        isAdminLoggedIn = false;
-        document.getElementById("adminPassword").value = "";
-        document.getElementById("adminAuthSection").style.display = "block";
-        document.getElementById("adminDashboardSection").style.display = "none";
-    }
-
-    /* TÍNH TOÁN & CẬP NHẬT DASHBOARD ADMIN */
     function updateAdminDashboard() {
-        if (!isAdminLoggedIn) return;
-
         let total = localData.length;
         let claimed = 0;
         let remaining = 0;
@@ -701,10 +711,7 @@
             }
 
             applyLockState();
-            
-            if (isAdminLoggedIn) {
-                updateAdminDashboard();
-            }
+            updateAdminDashboard();
 
         } catch (error) {
             console.error("Lỗi tải dữ liệu:", error);
@@ -767,18 +774,135 @@
         }
     }
 
+    /* HÀM TRÍCH LỌC TIN NHẮN THÔ THEO TỪ KHÓA (TỪ FILE LOCPMH.HTML) */
+    function filterRawMessageByKeywords(dataGoc, tuKhoaInput) {
+        const danhSachTuKhoa = tuKhoaInput.split(',')
+                                         .map(tk => tk.trim().toLowerCase())
+                                         .filter(tk => tk !== "");
+
+        if (danhSachTuKhoa.length === 0) {
+            return dataGoc; 
+        }
+
+        const cacKhoi = dataGoc.split(/━━━━━━+/);
+        let ketQuaDong = [];
+
+        cacKhoi.forEach(khoi => {
+            const cacDong = khoi.split('\n').map(d => d.trim()).filter(d => d !== "");
+            
+            if (cacDong.length >= 2) {
+                const dongThongTin = cacDong[0].toLowerCase();
+                const dongMuiTen = cacDong[1];
+
+                const timThay = danhSachTuKhoa.some(tuKhoa => dongThongTin.includes(tuKhoa));
+
+                if (timThay && dongMuiTen.startsWith('➜')) {
+                    ketQuaDong.push(dongMuiTen);
+                }
+            }
+        });
+
+        return ketQuaDong.join('\n');
+    }
+
+    /* BÓC TÁCH & LỌC TRÙNG MÃ COUPON TẠI CLIENT */
+    function parseTextCoupons(rawText) {
+        const lines = rawText.split("\n");
+        const parsedResults = [];
+        const seenInText = new Set(); 
+
+        const existingCodesInSystem = new Set(
+            localData.map(item => item.coupon ? item.coupon.trim().toUpperCase() : "")
+        );
+
+        lines.forEach(line => {
+            let cleanLine = line.trim();
+            if (!cleanLine) return;
+
+            cleanLine = cleanLine.replace(/^➜\s*/, "");
+            const parts = cleanLine.split(":");
+            
+            if (parts.length >= 2) {
+                const productName = parts[0].trim();
+                const couponCode = parts[1].trim();
+                const upperCode = couponCode.toUpperCase();
+
+                if (productName && couponCode && !seenInText.has(upperCode) && !existingCodesInSystem.has(upperCode)) {
+                    seenInText.add(upperCode);
+                    parsedResults.push({
+                        productName: productName,
+                        coupon: couponCode
+                    });
+                }
+            }
+        });
+
+        return parsedResults;
+    }
+
+    /* XỬ LÝ LỌC TRỰC TIẾP & BỔ SUNG COUPON DẠNG TEXT */
+    function handleImportTextCoupons() {
+        const rawContent = document.getElementById("rawTextCoupons").value.trim();
+        const keywordsStr = document.getElementById("filterKeywords").value.trim();
+        const statusDiv = document.getElementById("textStatus");
+
+        if (!rawContent) return alert("Vui lòng dán văn bản tin nhắn hoặc danh sách mã coupon vào khung!");
+
+        // 1. Tự động chạy bộ lọc tin nhắn thô theo từ khóa (nếu có nhập)
+        let textToParse = rawContent;
+        if (keywordsStr) {
+            textToParse = filterRawMessageByKeywords(rawContent, keywordsStr);
+        }
+
+        if (!textToParse.trim()) {
+            return alert("Không tìm thấy mã PMH nào khớp với từ khóa User QL/TC đã nhập!");
+        }
+
+        // 2. Bóc tách thành mảng Coupon & Lọc trùng với hệ thống
+        const parsedCoupons = parseTextCoupons(textToParse);
+
+        if (parsedCoupons.length === 0) {
+            return alert("Tất cả mã đã lọc đều bị trùng lặp (đã tồn tại trên Sheet) hoặc sai định dạng!");
+        }
+
+        // 3. Gửi lên Google Apps Script
+        statusDiv.className = "";
+        statusDiv.innerHTML = `<i class='fa-solid fa-spinner fa-spin'></i> Đang tải lên ${parsedCoupons.length} coupon đã lọc...`;
+
+        const formData = new URLSearchParams();
+        formData.append("action", "appendTextData");
+        formData.append("textCoupons", JSON.stringify(parsedCoupons));
+
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData.toString()
+        }).then(() => {
+            statusDiv.className = "status-success";
+            statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Thành công! Đã lọc & thêm ${parsedCoupons.length} mã duy nhất vào Sheet 2.`;
+            document.getElementById("rawTextCoupons").value = "";
+            setTimeout(async () => {
+                await refreshData();
+            }, 1200);
+        }).catch(err => {
+            statusDiv.className = "status-error";
+            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + err;
+        });
+    }
+
     function handleUpload() {
-        const password = document.getElementById("adminPassword").value;
         const fileInput = document.getElementById("excelFile");
         const expireDateInput = document.getElementById("expireDate").value; 
         const statusDiv = document.getElementById("adminStatus");
 
-        if (!password) return alert("Vui lòng điền mật khẩu quản trị!");
         if (!expireDateInput) return alert("Vui lòng chọn ngày giờ hiệu lực!");
         if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
 
         statusDiv.className = "";
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang cập nhật...";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang cập nhật kho Excel gốc...";
         
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -793,7 +917,6 @@
 
             const formData = new URLSearchParams();
             formData.append("action", "uploadData");
-            formData.append("password", password);
             formData.append("expireDate", expireDateInput); 
             formData.append("data", JSON.stringify(rawJson));
 
@@ -870,7 +993,6 @@
         }
     }
 
-    /* TỐI ƯU HOÁ TỨC THÌ (OPTIMISTIC UI & BACKGROUND TASK CHO IOS) */
     function copyAndClaim(couponCode, buttonEl) {
         if (isSystemExpired) return alert("Hệ thống đã hết hạn!");
         
@@ -880,7 +1002,6 @@
             return;
         }
 
-        // 1. SAO CHÉP TỨC THÌ VÀO CLIPBOARD (Được kích hoạt ngay trong User Gesture của iOS)
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(couponCode).catch(() => {
                 fallbackCopyTextToClipboard(couponCode);
@@ -889,7 +1010,6 @@
             fallbackCopyTextToClipboard(couponCode);
         }
 
-        // 2. OPTIMISTIC UI: Cập nhật giao diện & state local TỨC THÌ (< 0.05s)
         const parentEl = buttonEl.parentElement;
         const originalContent = parentEl.innerHTML;
 
@@ -902,11 +1022,8 @@
             return item;
         });
 
-        if (isAdminLoggedIn) {
-            updateAdminDashboard();
-        }
+        updateAdminDashboard();
 
-        // 3. BACKGROUND TASK: Đẩy dữ liệu lưu trữ về Google Sheet bất đồng bộ
         fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({
@@ -919,7 +1036,6 @@
         .then(dataRes => {
             if (dataRes.success === false) {
                 alert(dataRes.message || "Không thể đồng bộ với máy chủ!");
-                // Rollback nếu có lỗi nghiệp vụ từ Google Sheet
                 parentEl.innerHTML = originalContent;
                 refreshData();
             }
@@ -927,13 +1043,11 @@
         .catch(error => {
             console.error("Lỗi đồng bộ ngầm:", error);
             alert("Lỗi mạng khi lưu dữ liệu ngầm! Đang tải lại dữ liệu...");
-            // Rollback nếu gặp lỗi đường truyền
             parentEl.innerHTML = originalContent;
             refreshData();
         });
     }
 
-    /* Dynamic Fallback dành cho thiết bị iOS Safari cũ */
     function fallbackCopyTextToClipboard(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
