@@ -389,16 +389,16 @@
 <div id="textModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeTextModal()"><i class="fa-solid fa-xmark"></i></button>
-        <h3><i class="fa-solid fa-paste"></i> Lọc & Bổ Sung PMH Vùng </h3>
+        <h3><i class="fa-solid fa-paste"></i> Lọc & Bổ sung PMH Vùng </h3>
         
-        <label class="input-label"><i class="fa-solid fa-filter"></i> Từ khóa Lọc User QL/TC (phân cách bằng dấu phẩy):</label>
+        <label class="input-label"><i class="fa-solid fa-filter"></i> Nhập User QL/TC (phân cách bằng dấu phẩy):</label>
         <div class="input-group" style="margin-bottom: 12px;">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="filterKeywords" placeholder="Ví dụ: 53136, Vủ..." oninput="saveFilterKeywords()">
         </div>
 
         <label class="input-label"><i class="fa-solid fa-database"></i> Dán dữ liệu tin nhắn thô từ DM hoặc danh sách PMH:</label>
-        <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây hoặc mã mẫu:&#10;➜ PMH ICT100 : D9N97EB3V9&#10;➜ PMH MM200 : 1ZXD4O9PI0"></textarea>
+        <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây"></textarea>
         
         <button class="btn-secondary" onclick="handleImportTextCoupons()">
             <i class="fa-solid fa-filter-circle-dollar"></i> Lọc Theo User & Bổ Sung Mã Vào Sheet
