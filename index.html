@@ -9,8 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Lưu ý: Đã loại bỏ SheetJS ở head để tối ưu tốc độ load ban đầu (Lazy Loading) -->
-    
     <style>
         :root {
             --primary: #0284c7;
@@ -40,7 +38,7 @@
             background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); 
             color: var(--text-main); 
             min-height: 100vh;
-            min-height: 100dvh; /* Tối ưu chiều cao màn hình Mobile */
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -83,153 +81,66 @@
             transition: all 0.2s;
         }
 
-        .btn-toggle-admin:active {
-            transform: scale(0.98);
-        }
+        .btn-toggle-admin:active { transform: scale(0.98); }
+        .btn-toggle-admin:hover { background: var(--gray-bg); border-color: var(--text-muted); }
 
-        .btn-toggle-admin:hover {
-            background: var(--gray-bg);
-            border-color: var(--text-muted);
-        }
-
-        .app-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .app-header h2 {
-            font-size: 26px;
-            color: var(--dark);
-            margin: 0 0 10px 0;
-            font-weight: 700;
-        }
-
-        .app-header p {
-            color: var(--text-muted);
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.5;
-        }
+        .app-header { text-align: center; margin-bottom: 32px; }
+        .app-header h2 { font-size: 26px; color: var(--dark); margin: 0 0 10px 0; font-weight: 700; }
+        .app-header p { color: var(--text-muted); margin: 0; font-size: 14px; line-height: 1.5; }
 
         h3 { 
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark); 
-            margin-top: 0;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 16px; font-weight: 600; color: var(--dark); 
+            margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
         }
 
         .section-user {
             border: 1px solid rgba(2, 132, 199, 0.15); 
-            border-radius: 20px; 
-            background: #ffffff;
-            padding: 24px;
+            border-radius: 20px; background: #ffffff; padding: 24px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02);
         }
 
-        .input-group {
-            margin-bottom: 18px;
-            position: relative;
-        }
-
+        .input-group { margin-bottom: 18px; position: relative; }
         .input-group i {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 15px;
-            pointer-events: none;
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 15px; pointer-events: none;
         }
 
-        .input-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            display: block;
-        }
+        .input-label { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; display: block; }
 
         input[type="text"], input[type="password"], input[type="datetime-local"], textarea { 
-            width: 100%; 
-            padding: 14px 14px 14px 46px; 
-            border-radius: 14px; 
-            border: 1px solid var(--border); 
-            font-size: 15px; 
-            box-sizing: border-box;
-            background: var(--gray-bg);
-            color: var(--dark);
-            transition: all 0.2s ease;
+            width: 100%; padding: 14px 14px 14px 46px; border-radius: 14px; 
+            border: 1px solid var(--border); font-size: 15px; box-sizing: border-box;
+            background: var(--gray-bg); color: var(--dark); transition: all 0.2s ease;
         }
 
-        textarea {
-            padding: 12px 14px;
-            font-family: monospace;
-            font-size: 13px;
-            resize: vertical;
-        }
+        textarea { padding: 12px 14px; font-family: monospace; font-size: 13px; resize: vertical; }
 
         input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #ffffff;
+            outline: none; border-color: var(--primary); background: #ffffff;
             box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
         }
 
-        input:disabled {
-            background-color: #f1f5f9;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
+        input:disabled { background-color: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
 
         button { 
-            width: 100%;
-            padding: 14px 20px; 
-            border-radius: 14px; 
-            border: none;
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 15px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease; 
+            width: 100%; padding: 14px 20px; border-radius: 14px; border: none;
+            cursor: pointer; font-weight: 600; font-size: 15px; display: inline-flex;
+            justify-content: center; align-items: center; gap: 8px; transition: all 0.2s ease; 
         }
 
-        button:active {
-            transform: scale(0.98);
-        }
+        button:active { transform: scale(0.98); }
 
-        /* MODAL & BOTTOM SHEET STYLES */
         .admin-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; 
-            height: 100vh;
-            height: 100dvh;
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; 
+            height: 100vh; height: 100dvh; background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px); z-index: 1000; justify-content: center;
+            align-items: center; padding: 16px;
         }
 
         .modal-content {
-            background: #ffffff;
-            width: 100%;
-            max-width: 540px;
-            border-radius: 24px;
-            padding: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-            position: relative;
-            max-height: 90vh;
-            max-height: 90dvh;
-            overflow-y: auto;
+            background: #ffffff; width: 100%; max-width: 540px; border-radius: 24px;
+            padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            position: relative; max-height: 90vh; max-height: 90dvh; overflow-y: auto;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -239,299 +150,178 @@
         }
 
         .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--gray-bg);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            font-size: 14px;
-            transition: 0.2s;
+            position: absolute; top: 20px; right: 20px; background: var(--gray-bg);
+            border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 14px; transition: 0.2s;
         }
 
-        .modal-close:hover {
-            background: #e2e8f0;
-            color: var(--dark);
-        }
+        .modal-close:hover { background: #e2e8f0; color: var(--dark); }
 
         .btn-admin { background-color: var(--dark); color: white; }
         .btn-admin:hover { background-color: #0f172a; }
 
-        .btn-secondary {
-            background-color: var(--primary);
-            color: white;
-            margin-top: 8px;
-        }
+        .btn-secondary { background-color: var(--primary); color: white; margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--primary-hover); }
 
         .admin-section-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--dark);
-            margin: 18px 0 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 13px; font-weight: 700; color: var(--dark); margin: 18px 0 10px 0;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 0.5px;
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
 
         .stat-card {
-            background: var(--gray-bg);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 10px;
-            text-align: center;
+            background: var(--gray-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 12px 10px; text-align: center;
         }
 
-        .stat-card .stat-value {
-            font-size: 22px;
-            font-weight: 700;
-            margin-top: 4px;
-            line-height: 1.2;
-        }
-
+        .stat-card .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.2; }
         .stat-card.remaining .stat-value { color: var(--success); }
         .stat-card.claimed .stat-value { color: var(--danger); }
         .stat-card.total .stat-value { color: var(--primary); }
-
-        .stat-card .stat-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
 
         .product-stats-list {
-            max-height: 180px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 8px 14px;
-            background: #ffffff;
+            max-height: 180px; overflow-y: auto; border: 1px solid var(--border);
+            border-radius: 14px; padding: 8px 14px; background: #ffffff;
         }
 
         .product-stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border);
-            font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px;
         }
 
-        .product-stat-item:last-child {
-            border-bottom: none;
-        }
-
+        .product-stat-item:last-child { border-bottom: none; }
         .product-stat-name {
-            font-weight: 600;
-            color: var(--dark);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 65%;
+            font-weight: 600; color: var(--dark); white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; max-width: 65%;
         }
 
         .product-stat-count {
-            font-weight: 700;
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            white-space: nowrap;
+            font-weight: 700; font-size: 12px; padding: 4px 10px;
+            border-radius: 8px; transition: all 0.2s ease; white-space: nowrap;
         }
 
-        .product-stat-count.badge-unused {
-            background: var(--primary-light);
-            color: var(--primary-hover);
-        }
-
-        .product-stat-count.badge-used {
-            background: #ffe4e6;
-            color: #e11d48;
-            border: 1px solid #fecdd3;
-        }
+        .product-stat-count.badge-unused { background: var(--primary-light); color: var(--primary-hover); }
+        .product-stat-count.badge-used { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
 
         .file-upload-wrapper {
-            margin: 10px 0;
-            padding: 14px;
-            border: 2px dashed var(--border);
-            border-radius: 14px;
-            text-align: center;
-            background: var(--gray-bg);
+            margin: 10px 0; padding: 14px; border: 2px dashed var(--border);
+            border-radius: 14px; text-align: center; background: var(--gray-bg);
         }
         
-        input[type="file"] {
-            font-size: 13px;
-            color: var(--text-muted);
-            width: 100%;
-        }
+        input[type="file"] { font-size: 13px; color: var(--text-muted); width: 100%; }
 
         .product-card {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-top: 24px;
-            overflow: hidden;
+            background: #ffffff; border: 1px solid var(--border);
+            border-radius: 16px; margin-top: 24px; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
         .product-title { 
-            font-size: 15px; 
-            font-weight: 700; 
-            color: var(--dark); 
-            background: #f8fafc;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 15px; font-weight: 700; color: var(--dark); 
+            background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
         }
 
-        .coupon-list {
-            padding: 10px 20px;
-        }
+        .coupon-list { padding: 10px 20px; }
 
         .coupon-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 14px 0; 
-            border-bottom: 1px dashed var(--border); 
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 14px 0; border-bottom: 1px dashed var(--border); gap: 12px;
+            transition: all 0.3s ease;
         }
         .coupon-item:last-child { border-bottom: none; }
 
+        /* MÃ ĐÃ NHẬN: LÀM MỜ VÀ ĐỔI BACKGROUND */
+        .coupon-item.claimed {
+            opacity: 0.6;
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin: 6px 0;
+            border-bottom: none;
+        }
+
         .coupon-code {
-            font-family: monospace;
+            font-family: monospace; font-weight: 700; background: var(--primary-light);
+            color: var(--primary-hover); padding: 8px 14px; border-radius: 10px;
+            font-size: 15px; letter-spacing: 0.5px;
+        }
+
+        .coupon-item.claimed .coupon-code {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        /* KHỐI THÔNG TIN NGƯỜI NHẬN & THỜI GIAN */
+        .claimed-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .claimed-user {
+            font-size: 13px;
             font-weight: 700;
-            background: var(--primary-light);
-            color: var(--primary-hover);
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            letter-spacing: 0.5px;
+            color: #e11d48;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .claimed-time {
+            font-size: 11px; /* KÍCH THƯỚC NHỎ HƠN */
+            color: var(--text-muted);
+            margin-top: 2px;
         }
 
         .btn-copy { 
-            background-color: var(--success); 
-            color: white; 
-            padding: 10px 18px; 
-            font-size: 14px; 
-            width: auto;
-            border-radius: 10px;
-            white-space: nowrap;
+            background-color: var(--success); color: white; padding: 10px 18px; 
+            font-size: 14px; width: auto; border-radius: 10px; white-space: nowrap;
         }
         .btn-copy:hover { background-color: var(--success-hover); }
 
-        #adminStatus, #textStatus {
-            margin-top: 14px;
-            font-size: 13px;
-            font-weight: 500;
-            text-align: center;
-        }
-
+        #adminStatus, #textStatus { margin-top: 14px; font-size: 13px; font-weight: 500; text-align: center; }
         .status-success { color: var(--success); }
         .status-error { color: var(--danger); }
 
-        .loading-spinner { 
-            color: var(--text-muted); 
-            text-align: center;
-            font-size: 14px;
-            margin: 20px 0;
-        }
-        
-        .used-badge {
-            color: var(--text-muted);
-            font-style: italic;
-            font-size: 13px;
-        }
+        .loading-spinner { color: var(--text-muted); text-align: center; font-size: 14px; margin: 20px 0; }
 
-        /* TOAST NOTIFICATION SYSTEM */
         .toast-container {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
-            width: max-content;
-            max-width: 90vw;
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 2000; display: flex; flex-direction: column; gap: 8px;
+            pointer-events: none; width: max-content; max-width: 90vw;
         }
 
         .toast {
-            background: var(--dark);
-            color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--dark); color: #ffffff; padding: 12px 20px; border-radius: 50px;
+            font-size: 14px; font-weight: 500; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 10px; opacity: 0;
+            transform: translateY(20px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
+        .toast.show { opacity: 1; transform: translateY(0); }
         .toast-success { background: #065f46; color: #a7f3d0; }
         .toast-error { background: #881337; color: #fecdd3; }
         .toast-info { background: #0f172a; color: #f1f5f9; }
 
-        /* OPTIMIZATION CHO MOBILE (< 576px) */
         @media (max-width: 576px) {
             body { padding: 16px 12px; }
             .container { padding: 20px 14px; border-radius: 20px; }
             .app-header h2 { font-size: 22px; }
 
-            /* Đặt font-size >= 16px để triệt tiêu lỗi iOS Safari tự Zoom */
-            input[type="text"], 
-            input[type="password"], 
-            input[type="datetime-local"], 
-            textarea {
-                font-size: 16px !important;
-                padding: 12px 12px 12px 42px;
+            input[type="text"], input[type="password"], input[type="datetime-local"], textarea {
+                font-size: 16px !important; padding: 12px 12px 12px 42px;
             }
+            textarea { padding: 12px; }
 
-            textarea {
-                padding: 12px;
-            }
-
-            /* Chuyển Modal thành Bottom Sheet chuẩn Mobile UI */
-            .admin-modal {
-                align-items: flex-end;
-                padding: 0;
-            }
-
+            .admin-modal { align-items: flex-end; padding: 0; }
             .modal-content {
-                width: 100%;
-                max-width: 100%;
-                border-radius: 24px 24px 0 0;
-                padding: 24px 18px 32px 18px;
-                max-height: 85dvh;
+                width: 100%; max-width: 100%; border-radius: 24px 24px 0 0;
+                padding: 24px 18px 32px 18px; max-height: 85dvh;
                 animation: slideUpBottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
@@ -541,22 +331,12 @@
             }
 
             .coupon-list { padding: 8px 14px; }
-            
             .coupon-item {
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 12px 0;
+                flex-direction: row !important; justify-content: space-between !important;
+                align-items: center !important; padding: 12px 0;
             }
-            .coupon-code {
-                font-size: 14px;
-                padding: 8px 10px;
-            }
-            .btn-copy { 
-                width: auto !important; 
-                padding: 8px 14px !important; 
-                font-size: 13px !important;
-            }
+            .coupon-code { font-size: 14px; padding: 8px 10px; }
+            .btn-copy { width: auto !important; padding: 8px 14px !important; font-size: 13px !important; }
             
             .stats-grid { gap: 6px; }
             .stat-card .stat-value { font-size: 18px; }
@@ -564,10 +344,7 @@
 
             .top-navbar { flex-wrap: wrap; }
             .top-navbar .btn-toggle-admin { font-size: 13px; padding: 8px 12px; }
-
-            .toast-container {
-                bottom: 16px;
-            }
+            .toast-container { bottom: 16px; }
         }
     </style>
 </head>
@@ -609,7 +386,6 @@
     </div>
 </div>
 
-<!-- MODAL BỔ SUNG COUPON DẠNG TEXT -->
 <div id="textModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeTextModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -622,7 +398,7 @@
         </div>
 
         <label class="input-label"><i class="fa-solid fa-database"></i> Dán dữ liệu tin nhắn thô từ DM hoặc danh sách PMH:</label>
-        <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây"></textarea>
+        <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây hoặc mã mẫu:&#10;➜ PMH ICT100 : D9N97EB3V9&#10;➜ PMH MM200 : 1ZXD4O9PI0"></textarea>
         
         <button class="btn-secondary" onclick="handleImportTextCoupons()">
             <i class="fa-solid fa-filter-circle-dollar"></i> Lọc Theo User & Bổ Sung Mã Vào Sheet
@@ -631,18 +407,15 @@
     </div>
 </div>
 
-<!-- MODAL CẤU HÌNH & THỐNG KÊ -->
 <div id="adminModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
         
-        <!-- DASHBOARD THỐNG KÊ & TẢI FILE EXCEL -->
         <div id="adminDashboardSection">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 style="margin:0;"><i class="fa-solid fa-chart-pie"></i> Thống Kê Kho Coupon</h3>
             </div>
 
-            <!-- CARD THỐNG KÊ TỔNG QUAN -->
             <div class="stats-grid">
                 <div class="stat-card remaining">
                     <div class="stat-label">Còn lại</div>
@@ -658,7 +431,6 @@
                 </div>
             </div>
 
-            <!-- DANH SÁCH THỐNG KÊ THEO SẢN PHẨM -->
             <div class="admin-section-title"><i class="fa-solid fa-boxes-stacked"></i> Thống kê theo sản phẩm</div>
             <div class="product-stats-list" id="productStatsList">
                 <div style="text-align: center; color: var(--text-muted); padding: 10px;">Chưa có dữ liệu</div>
@@ -666,7 +438,6 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-            <!-- FORM TẢI FILE EXCEL & CẤU HÌNH HẠN DÙNG -->
             <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel gốc & Hạn dùng</div>
 
             <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
@@ -698,11 +469,9 @@
 
     window.onload = async function() {
         await refreshData();
-        // Tăng interval lên 5000ms để tiết kiệm Pin & CPU trên Mobile
         setInterval(checkTimeRealtime, 5000);
     };
 
-    /* HÀM NẠP ĐỘNG SHEETJS CHỈ KHI CẦN THIẾT (LAZY LOADING) */
     async function ensureXLSXLoaded() {
         if (window.XLSX) return true;
         if (isXLSXLoading) {
@@ -715,19 +484,12 @@
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-            script.onload = () => {
-                isXLSXLoading = false;
-                resolve(true);
-            };
-            script.onerror = (err) => {
-                isXLSXLoading = false;
-                reject(err);
-            };
+            script.onload = () => { isXLSXLoading = false; resolve(true); };
+            script.onerror = (err) => { isXLSXLoading = false; reject(err); };
             document.head.appendChild(script);
         });
     }
 
-    /* HỆ THỐNG TOAST NOTIFICATION */
     function showToast(message, type = 'info') {
         let container = document.getElementById("toastContainer");
         if (!container) {
@@ -747,16 +509,12 @@
         toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
         container.appendChild(toast);
 
-        requestAnimationFrame(() => {
-            toast.classList.add("show");
-        });
+        requestAnimationFrame(() => toast.classList.add("show"));
 
         setTimeout(() => {
             toast.classList.remove("show");
             setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
             }, 300);
         }, 3000);
     }
@@ -764,14 +522,11 @@
     function openTextModal() {
         document.getElementById("textModal").style.display = "flex";
         const tuKhoaDaLuu = localStorage.getItem('tuKhoaPMH_Backup');
-        if (tuKhoaDaLuu) {
-            document.getElementById('filterKeywords').value = tuKhoaDaLuu;
-        }
+        if (tuKhoaDaLuu) document.getElementById('filterKeywords').value = tuKhoaDaLuu;
     }
 
     function saveFilterKeywords() {
-        const tuKhoaRaw = document.getElementById('filterKeywords').value;
-        localStorage.setItem('tuKhoaPMH_Backup', tuKhoaRaw);
+        localStorage.setItem('tuKhoaPMH_Backup', document.getElementById('filterKeywords').value);
     }
 
     function closeTextModal() {
@@ -797,22 +552,14 @@
 
         localData.forEach(item => {
             let isClaimed = !!item.claimedBy;
-            if (isClaimed) {
-                claimed++;
-            } else {
-                remaining++;
-            }
+            if (isClaimed) claimed++; else remaining++;
 
             let prodName = item.productName || "Sản phẩm không tên";
-            if (!productMap[prodName]) {
-                productMap[prodName] = { total: 0, remaining: 0, claimed: 0 };
-            }
+            if (!productMap[prodName]) productMap[prodName] = { total: 0, remaining: 0, claimed: 0 };
+            
             productMap[prodName].total++;
-            if (isClaimed) {
-                productMap[prodName].claimed++;
-            } else {
-                productMap[prodName].remaining++;
-            }
+            if (isClaimed) productMap[prodName].claimed++;
+            else productMap[prodName].remaining++;
         });
 
         document.getElementById("statTotal").innerText = total;
@@ -831,7 +578,6 @@
             let pData = productMap[pName];
             let itemDiv = document.createElement("div");
             itemDiv.className = "product-stat-item";
-            
             let badgeStyleClass = (pData.claimed > 0) ? "badge-used" : "badge-unused";
 
             itemDiv.innerHTML = `
@@ -863,10 +609,11 @@
 
             applyLockState();
             updateAdminDashboard();
+            if (document.getElementById("searchKey").value.trim()) searchCoupon();
 
         } catch (error) {
             console.error("Lỗi tải dữ liệu:", error);
-            showToast("Lỗi đồng bộ dữ liệu từ máy chủ!", "error");
+            showToast("Lỗi đồng bộ dữ liệu!", "error");
         }
         showLoading(false);
     }
@@ -913,9 +660,8 @@
         const userNameInput = document.getElementById("userName");
         const searchInput = document.getElementById("searchKey");
         const resultArea = document.getElementById("resultArea");
-        const userName = userNameInput.value.trim();
 
-        if (userName.length > 0) {
+        if (userNameInput.value.trim().length > 0) {
             searchInput.disabled = false;
             searchInput.placeholder = "Gõ tên sản phẩm cần tìm...";
         } else {
@@ -927,27 +673,18 @@
     }
 
     function filterRawMessageByKeywords(dataGoc, tuKhoaInput) {
-        const danhSachTuKhoa = tuKhoaInput.split(',')
-                                         .map(tk => tk.trim().toLowerCase())
-                                         .filter(tk => tk !== "");
-
-        if (danhSachTuKhoa.length === 0) {
-            return dataGoc; 
-        }
+        const danhSachTuKhoa = tuKhoaInput.split(',').map(tk => tk.trim().toLowerCase()).filter(tk => tk !== "");
+        if (danhSachTuKhoa.length === 0) return dataGoc; 
 
         const cacKhoi = dataGoc.split(/━━━━━━+/);
         let ketQuaDong = [];
 
         cacKhoi.forEach(khoi => {
             const cacDong = khoi.split('\n').map(d => d.trim()).filter(d => d !== "");
-            
             if (cacDong.length >= 2) {
                 const dongThongTin = cacDong[0].toLowerCase();
                 const dongMuiTen = cacDong[1];
-
-                const timThay = danhSachTuKhoa.some(tuKhoa => dongThongTin.includes(tuKhoa));
-
-                if (timThay && dongMuiTen.startsWith('➜')) {
+                if (danhSachTuKhoa.some(tuKhoa => dongThongTin.includes(tuKhoa)) && dongMuiTen.startsWith('➜')) {
                     ketQuaDong.push(dongMuiTen);
                 }
             }
@@ -960,16 +697,10 @@
         const lines = rawText.split("\n");
         const parsedResults = [];
         const seenInText = new Set(); 
-
-        const existingCodesInSystem = new Set(
-            localData.map(item => item.coupon ? item.coupon.trim().toUpperCase() : "")
-        );
+        const existingCodesInSystem = new Set(localData.map(item => item.coupon ? item.coupon.trim().toUpperCase() : ""));
 
         lines.forEach(line => {
-            let cleanLine = line.trim();
-            if (!cleanLine) return;
-
-            cleanLine = cleanLine.replace(/^➜\s*/, "");
+            let cleanLine = line.trim().replace(/^➜\s*/, "");
             const parts = cleanLine.split(":");
             
             if (parts.length >= 2) {
@@ -979,10 +710,7 @@
 
                 if (productName && couponCode && !seenInText.has(upperCode) && !existingCodesInSystem.has(upperCode)) {
                     seenInText.add(upperCode);
-                    parsedResults.push({
-                        productName: productName,
-                        coupon: couponCode
-                    });
+                    parsedResults.push({ productName: productName, coupon: couponCode });
                 }
             }
         });
@@ -997,20 +725,11 @@
 
         if (!rawContent) return alert("Vui lòng dán văn bản tin nhắn hoặc danh sách mã coupon vào khung!");
 
-        let textToParse = rawContent;
-        if (keywordsStr) {
-            textToParse = filterRawMessageByKeywords(rawContent, keywordsStr);
-        }
-
-        if (!textToParse.trim()) {
-            return alert("Không tìm thấy mã PMH nào khớp với từ khóa User QL/TC đã nhập!");
-        }
+        let textToParse = keywordsStr ? filterRawMessageByKeywords(rawContent, keywordsStr) : rawContent;
+        if (!textToParse.trim()) return alert("Không tìm thấy mã PMH nào khớp với từ khóa đã nhập!");
 
         const parsedCoupons = parseTextCoupons(textToParse);
-
-        if (parsedCoupons.length === 0) {
-            return alert("Tất cả mã đã lọc đều bị trùng lặp (đã tồn tại trên Sheet) hoặc sai định dạng!");
-        }
+        if (parsedCoupons.length === 0) return alert("Tất cả mã đã lọc đều bị trùng lặp hoặc sai định dạng!");
 
         statusDiv.className = "";
         statusDiv.innerHTML = `<i class='fa-solid fa-spinner fa-spin'></i> Đang tải lên ${parsedCoupons.length} coupon đã lọc...`;
@@ -1022,22 +741,18 @@
         fetch(API_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
         }).then(() => {
             statusDiv.className = "status-success";
-            statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Thành công! Đã lọc & thêm ${parsedCoupons.length} mã duy nhất vào Sheet 2.`;
-            showToast(`Đã tải lên thành công ${parsedCoupons.length} mã!`, 'success');
+            statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Đã thêm ${parsedCoupons.length} mã duy nhất vào Sheet.`;
+            showToast(`Thành công thêm ${parsedCoupons.length} mã!`, 'success');
             document.getElementById("rawTextCoupons").value = "";
-            setTimeout(async () => {
-                await refreshData();
-            }, 1200);
+            setTimeout(refreshData, 1200);
         }).catch(err => {
             statusDiv.className = "status-error";
             statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + err;
-            showToast("Lỗi gửi dữ liệu!", "error");
+            showToast("Lỗi tải dữ liệu!", "error");
         });
     }
 
@@ -1050,18 +765,17 @@
         if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
 
         statusDiv.className = "";
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang tải thư viện xử lý Excel...";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang nạp thư viện xử lý...";
 
         try {
-            // Tải thư viện XLSX khi bấm nút
             await ensureXLSXLoaded();
         } catch (error) {
             statusDiv.className = "status-error";
-            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi nạp thư viện Excel. Vui lòng thử lại!";
+            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi nạp thư viện Excel!";
             return;
         }
 
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang đọc & cập nhật kho Excel gốc...";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang tải kho Excel gốc...";
         
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -1069,9 +783,7 @@
         reader.onload = function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const rawJson = XLSX.utils.sheet_to_json(worksheet, {header: 1});
 
             const formData = new URLSearchParams();
@@ -1082,14 +794,12 @@
             fetch(API_URL, {
                 method: "POST",
                 mode: "no-cors", 
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: formData.toString()
             }).then(() => {
                 statusDiv.className = "status-success";
-                statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ kho dữ liệu thành công!";
-                showToast("Đã đồng bộ kho dữ liệu thành công!", "success");
+                statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ dữ liệu thành công!";
+                showToast("Đã cập nhật dữ liệu Excel thành công!", "success");
                 setTimeout(async () => {
                     await refreshData();
                     closeAdminModal();
@@ -1097,20 +807,17 @@
             }).catch(err => {
                 statusDiv.className = "status-error";
                 statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối: " + err;
-                showToast("Lỗi kết nối máy chủ!", "error");
             });
         };
         reader.readAsArrayBuffer(file);
     }
 
-    /* TÌM KIẾM CÓ DEBOUNCE ĐỂ TRÁNH LAG KHI GÕ */
     function debouncedSearchCoupon() {
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => {
-            searchCoupon();
-        }, 250);
+        searchDebounceTimer = setTimeout(searchCoupon, 250);
     }
 
+    /* TÌM KIẾM & HIỂN THỊ CẢ MÃ CHƯA NHẬN VÀ ĐÃ NHẬN (LÀM MỜ) */
     function searchCoupon() {
         if (isSystemExpired) return;
 
@@ -1123,18 +830,17 @@
         let grouped = {};
         let hasMatch = false;
 
+        // Quét lấy TẤT CẢ mã phù hợp sản phẩm (kể cả đã claimed)
         localData.forEach(item => {
-            if (item.productName && item.productName.toLowerCase().includes(keyword) && !item.claimedBy) {
-                if (!grouped[item.productName]) {
-                    grouped[item.productName] = [];
-                }
-                grouped[item.productName].push(item.coupon);
+            if (item.productName && item.productName.toLowerCase().includes(keyword)) {
+                if (!grouped[item.productName]) grouped[item.productName] = [];
+                grouped[item.productName].push(item);
                 hasMatch = true;
             }
         });
 
         if (!hasMatch) {
-            resultArea.innerHTML = "<div class='loading-spinner'>Không tìm thấy coupon khả dụng cho sản phẩm này.</div>";
+            resultArea.innerHTML = "<div class='loading-spinner'>Không tìm thấy coupon cho sản phẩm này.</div>";
             return;
         }
 
@@ -1142,16 +848,36 @@
             let cardDiv = document.createElement("div");
             cardDiv.className = "product-card";
             
+            // Ưu tiên đưa mã CHƯA NHẬN lên trên, mã ĐÃ NHẬN xuống dưới
+            grouped[prodName].sort((a, b) => (a.claimedBy ? 1 : 0) - (b.claimedBy ? 1 : 0));
+
             let html = `<div class="product-title"><i class="fa-solid fa-box-open" style="color:var(--primary);"></i> ${prodName}</div>`;
             html += `<div class="coupon-list">`;
             
-            grouped[prodName].forEach(cp => {
-                html += `
-                    <div class="coupon-item">
-                        <span class="coupon-code">${cp}</span>
-                        <button class="btn-copy" onclick="copyAndClaim('${cp}', this)">
+            grouped[prodName].forEach(item => {
+                const isClaimed = !!item.claimedBy;
+                const itemClass = isClaimed ? "coupon-item claimed" : "coupon-item";
+                
+                let actionHtml = "";
+                if (isClaimed) {
+                    actionHtml = `
+                        <div class="claimed-info">
+                            <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${item.claimedBy}</span>
+                            <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${item.claimedAt || 'Đã nhận'}</span>
+                        </div>
+                    `;
+                } else {
+                    actionHtml = `
+                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', this)">
                             <i class="fa-solid fa-copy"></i> Nhận Mã
                         </button>
+                    `;
+                }
+
+                html += `
+                    <div class="${itemClass}">
+                        <span class="coupon-code">${item.coupon}</span>
+                        ${actionHtml}
                     </div>
                 `;
             });
@@ -1162,6 +888,7 @@
         }
     }
 
+    /* NHẬN MÃ: CẬP NHẬT GIAO DIỆN LÀM MỜ VÀ THỜI GIAN NHẬN */
     function copyAndClaim(couponCode, buttonEl) {
         if (isSystemExpired) return alert("Hệ thống đã hết hạn!");
         
@@ -1171,50 +898,61 @@
             return;
         }
 
+        // Định dạng thời gian: Giờ:Phút Ngày/Tháng/Năm
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
+
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(couponCode).catch(() => {
-                fallbackCopyTextToClipboard(couponCode);
-            });
+            navigator.clipboard.writeText(couponCode).catch(() => fallbackCopyTextToClipboard(couponCode));
         } else {
             fallbackCopyTextToClipboard(couponCode);
         }
 
         showToast(`Đã sao chép mã: ${couponCode}`, 'success');
 
-        const parentEl = buttonEl.parentElement;
-        const originalContent = parentEl.innerHTML;
+        // Cập nhật DOM trực tiếp (Optimistic UI)
+        const parentEl = buttonEl.closest('.coupon-item');
+        if (parentEl) {
+            parentEl.classList.add('claimed');
+            buttonEl.outerHTML = `
+                <div class="claimed-info">
+                    <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${user}</span>
+                    <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${formattedTime}</span>
+                </div>
+            `;
+        }
 
-        parentEl.innerHTML = `<span class="used-badge"><i class="fa-solid fa-circle-check" style="color:var(--success)"></i> Nhận thành công</span>`;
-
+        // Cập nhật State cục bộ
         localData = localData.map(item => {
             if (item.coupon === couponCode) {
                 item.claimedBy = user;
+                item.claimedAt = formattedTime;
             }
             return item;
         });
 
         updateAdminDashboard();
 
+        // Gửi thông tin kèm theo thời gian claimedAt lên Google Sheet
         fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({
                 action: "claimCoupon",
                 coupon: couponCode,
-                user: user
+                user: user,
+                claimedAt: formattedTime
             })
         })
         .then(res => res.json())
         .then(dataRes => {
             if (dataRes.success === false) {
                 showToast(dataRes.message || "Không thể đồng bộ với máy chủ!", "error");
-                parentEl.innerHTML = originalContent;
                 refreshData();
             }
         })
         .catch(error => {
             console.error("Lỗi đồng bộ ngầm:", error);
             showToast("Lỗi kết nối ngầm! Đang tải lại...", "error");
-            parentEl.innerHTML = originalContent;
             refreshData();
         });
     }
@@ -1222,17 +960,11 @@
     function fallbackCopyTextToClipboard(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.top = "0";
-        textArea.style.left = "0";
+        textArea.style.top = "0"; textArea.style.left = "0";
         textArea.style.position = "fixed";
         document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            document.execCommand('copy');
-        } catch (err) {
-            console.error('Lỗi sao chép thủ công:', err);
-        }
+        textArea.focus(); textArea.select();
+        try { document.execCommand('copy'); } catch (err) {}
         document.body.removeChild(textArea);
     }
 </script>
