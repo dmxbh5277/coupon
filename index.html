@@ -2,13 +2,14 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Hệ Thống Lọc & Nhận Coupon Cao Cấp</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Lưu ý: Đã loại bỏ SheetJS ở head để tối ưu tốc độ load ban đầu (Lazy Loading) -->
     
     <style>
         :root {
@@ -30,6 +31,7 @@
             box-sizing: border-box;
             font-family: 'Plus Jakarta Sans', sans-serif;
             letter-spacing: -0.2px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body { 
@@ -38,6 +40,7 @@
             background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); 
             color: var(--text-main); 
             min-height: 100vh;
+            min-height: 100dvh; /* Tối ưu chiều cao màn hình Mobile */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -68,7 +71,7 @@
             background: #ffffff;
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 12px;
             font-size: 14px;
             font-weight: 600;
@@ -80,10 +83,13 @@
             transition: all 0.2s;
         }
 
+        .btn-toggle-admin:active {
+            transform: scale(0.98);
+        }
+
         .btn-toggle-admin:hover {
             background: var(--gray-bg);
             border-color: var(--text-muted);
-            transform: translateY(-1px);
         }
 
         .app-header {
@@ -136,6 +142,7 @@
             transform: translateY(-50%);
             color: var(--text-muted);
             font-size: 15px;
+            pointer-events: none;
         }
 
         .input-label {
@@ -193,10 +200,17 @@
             transition: all 0.2s ease; 
         }
 
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* MODAL & BOTTOM SHEET STYLES */
         .admin-modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0; width: 100%; 
+            height: 100vh;
+            height: 100dvh;
             background: rgba(15, 23, 42, 0.4);
             backdrop-filter: blur(4px);
             z-index: 1000;
@@ -214,8 +228,9 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             position: relative;
             max-height: 90vh;
+            max-height: 90dvh;
             overflow-y: auto;
-            animation: slideUp 0.3s ease;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideUp {
@@ -446,14 +461,85 @@
             font-size: 13px;
         }
 
+        /* TOAST NOTIFICATION SYSTEM */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: max-content;
+            max-width: 90vw;
+        }
+
+        .toast {
+            background: var(--dark);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-success { background: #065f46; color: #a7f3d0; }
+        .toast-error { background: #881337; color: #fecdd3; }
+        .toast-info { background: #0f172a; color: #f1f5f9; }
+
+        /* OPTIMIZATION CHO MOBILE (< 576px) */
         @media (max-width: 576px) {
             body { padding: 16px 12px; }
             .container { padding: 20px 14px; border-radius: 20px; }
             .app-header h2 { font-size: 22px; }
-            input[type="text"], input[type="password"], input[type="datetime-local"] {
+
+            /* Đặt font-size >= 16px để triệt tiêu lỗi iOS Safari tự Zoom */
+            input[type="text"], 
+            input[type="password"], 
+            input[type="datetime-local"], 
+            textarea {
+                font-size: 16px !important;
                 padding: 12px 12px 12px 42px;
-                font-size: 14px;
             }
+
+            textarea {
+                padding: 12px;
+            }
+
+            /* Chuyển Modal thành Bottom Sheet chuẩn Mobile UI */
+            .admin-modal {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .modal-content {
+                width: 100%;
+                max-width: 100%;
+                border-radius: 24px 24px 0 0;
+                padding: 24px 18px 32px 18px;
+                max-height: 85dvh;
+                animation: slideUpBottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            @keyframes slideUpBottom {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+
             .coupon-list { padding: 8px 14px; }
             
             .coupon-item {
@@ -472,13 +558,16 @@
                 font-size: 13px !important;
             }
             
-            .modal-content { padding: 24px 16px; border-radius: 20px; }
             .stats-grid { gap: 6px; }
             .stat-card .stat-value { font-size: 18px; }
             .stat-card .stat-label { font-size: 10px; }
 
             .top-navbar { flex-wrap: wrap; }
             .top-navbar .btn-toggle-admin { font-size: 13px; padding: 8px 12px; }
+
+            .toast-container {
+                bottom: 16px;
+            }
         }
     </style>
 </head>
@@ -509,7 +598,7 @@
         
         <div class="input-group">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchKey" placeholder="Vui lòng điền tên trước khi tìm sản phẩm..." oninput="searchCoupon()" disabled>
+            <input type="text" id="searchKey" placeholder="Vui lòng điền tên trước khi tìm sản phẩm..." oninput="debouncedSearchCoupon()" disabled>
         </div>
         
         <div id="loadingText" class="loading-spinner" style="display:none;">
@@ -520,7 +609,7 @@
     </div>
 </div>
 
-<!-- MODAL BỔ SUNG COUPON DẠNG TEXT (TÍCH HỢP BỘ LỌC DM) -->
+<!-- MODAL BỔ SUNG COUPON DẠNG TEXT -->
 <div id="textModal" class="admin-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeTextModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -577,7 +666,7 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-            <!-- FORM TẢI FILE EXCEL & CẤU HÌNH HẠN DÙNG (SHEET 1) -->
+            <!-- FORM TẢI FILE EXCEL & CẤU HÌNH HẠN DÙNG -->
             <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel gốc & Hạn dùng</div>
 
             <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
@@ -604,11 +693,73 @@
     let localData = []; 
     let isSystemExpired = false;
     let targetExpireTime = null;
+    let searchDebounceTimer = null;
+    let isXLSXLoading = false;
 
     window.onload = async function() {
         await refreshData();
-        setInterval(checkTimeRealtime, 1000);
+        // Tăng interval lên 5000ms để tiết kiệm Pin & CPU trên Mobile
+        setInterval(checkTimeRealtime, 5000);
     };
+
+    /* HÀM NẠP ĐỘNG SHEETJS CHỈ KHI CẦN THIẾT (LAZY LOADING) */
+    async function ensureXLSXLoaded() {
+        if (window.XLSX) return true;
+        if (isXLSXLoading) {
+            while (!window.XLSX) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+            return true;
+        }
+        isXLSXLoading = true;
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+            script.onload = () => {
+                isXLSXLoading = false;
+                resolve(true);
+            };
+            script.onerror = (err) => {
+                isXLSXLoading = false;
+                reject(err);
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    /* HỆ THỐNG TOAST NOTIFICATION */
+    function showToast(message, type = 'info') {
+        let container = document.getElementById("toastContainer");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "toastContainer";
+            container.className = "toast-container";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        
+        let iconClass = 'fa-circle-info';
+        if (type === 'success') iconClass = 'fa-circle-check';
+        if (type === 'error') iconClass = 'fa-circle-xmark';
+
+        toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.classList.add("show");
+        });
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
 
     function openTextModal() {
         document.getElementById("textModal").style.display = "flex";
@@ -715,6 +866,7 @@
 
         } catch (error) {
             console.error("Lỗi tải dữ liệu:", error);
+            showToast("Lỗi đồng bộ dữ liệu từ máy chủ!", "error");
         }
         showLoading(false);
     }
@@ -774,7 +926,6 @@
         }
     }
 
-    /* HÀM TRÍCH LỌC TIN NHẮN THÔ THEO TỪ KHÓA (TỪ FILE LOCPMH.HTML) */
     function filterRawMessageByKeywords(dataGoc, tuKhoaInput) {
         const danhSachTuKhoa = tuKhoaInput.split(',')
                                          .map(tk => tk.trim().toLowerCase())
@@ -805,7 +956,6 @@
         return ketQuaDong.join('\n');
     }
 
-    /* BÓC TÁCH & LỌC TRÙNG MÃ COUPON TẠI CLIENT */
     function parseTextCoupons(rawText) {
         const lines = rawText.split("\n");
         const parsedResults = [];
@@ -840,7 +990,6 @@
         return parsedResults;
     }
 
-    /* XỬ LÝ LỌC TRỰC TIẾP & BỔ SUNG COUPON DẠNG TEXT */
     function handleImportTextCoupons() {
         const rawContent = document.getElementById("rawTextCoupons").value.trim();
         const keywordsStr = document.getElementById("filterKeywords").value.trim();
@@ -848,7 +997,6 @@
 
         if (!rawContent) return alert("Vui lòng dán văn bản tin nhắn hoặc danh sách mã coupon vào khung!");
 
-        // 1. Tự động chạy bộ lọc tin nhắn thô theo từ khóa (nếu có nhập)
         let textToParse = rawContent;
         if (keywordsStr) {
             textToParse = filterRawMessageByKeywords(rawContent, keywordsStr);
@@ -858,14 +1006,12 @@
             return alert("Không tìm thấy mã PMH nào khớp với từ khóa User QL/TC đã nhập!");
         }
 
-        // 2. Bóc tách thành mảng Coupon & Lọc trùng với hệ thống
         const parsedCoupons = parseTextCoupons(textToParse);
 
         if (parsedCoupons.length === 0) {
             return alert("Tất cả mã đã lọc đều bị trùng lặp (đã tồn tại trên Sheet) hoặc sai định dạng!");
         }
 
-        // 3. Gửi lên Google Apps Script
         statusDiv.className = "";
         statusDiv.innerHTML = `<i class='fa-solid fa-spinner fa-spin'></i> Đang tải lên ${parsedCoupons.length} coupon đã lọc...`;
 
@@ -883,6 +1029,7 @@
         }).then(() => {
             statusDiv.className = "status-success";
             statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Thành công! Đã lọc & thêm ${parsedCoupons.length} mã duy nhất vào Sheet 2.`;
+            showToast(`Đã tải lên thành công ${parsedCoupons.length} mã!`, 'success');
             document.getElementById("rawTextCoupons").value = "";
             setTimeout(async () => {
                 await refreshData();
@@ -890,10 +1037,11 @@
         }).catch(err => {
             statusDiv.className = "status-error";
             statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + err;
+            showToast("Lỗi gửi dữ liệu!", "error");
         });
     }
 
-    function handleUpload() {
+    async function handleUpload() {
         const fileInput = document.getElementById("excelFile");
         const expireDateInput = document.getElementById("expireDate").value; 
         const statusDiv = document.getElementById("adminStatus");
@@ -902,7 +1050,18 @@
         if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
 
         statusDiv.className = "";
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang cập nhật kho Excel gốc...";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang tải thư viện xử lý Excel...";
+
+        try {
+            // Tải thư viện XLSX khi bấm nút
+            await ensureXLSXLoaded();
+        } catch (error) {
+            statusDiv.className = "status-error";
+            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi nạp thư viện Excel. Vui lòng thử lại!";
+            return;
+        }
+
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Hệ thống đang đọc & cập nhật kho Excel gốc...";
         
         const file = fileInput.files[0];
         const reader = new FileReader();
@@ -930,6 +1089,7 @@
             }).then(() => {
                 statusDiv.className = "status-success";
                 statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ kho dữ liệu thành công!";
+                showToast("Đã đồng bộ kho dữ liệu thành công!", "success");
                 setTimeout(async () => {
                     await refreshData();
                     closeAdminModal();
@@ -937,9 +1097,18 @@
             }).catch(err => {
                 statusDiv.className = "status-error";
                 statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối: " + err;
+                showToast("Lỗi kết nối máy chủ!", "error");
             });
         };
         reader.readAsArrayBuffer(file);
+    }
+
+    /* TÌM KIẾM CÓ DEBOUNCE ĐỂ TRÁNH LAG KHI GÕ */
+    function debouncedSearchCoupon() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            searchCoupon();
+        }, 250);
     }
 
     function searchCoupon() {
@@ -1010,6 +1179,8 @@
             fallbackCopyTextToClipboard(couponCode);
         }
 
+        showToast(`Đã sao chép mã: ${couponCode}`, 'success');
+
         const parentEl = buttonEl.parentElement;
         const originalContent = parentEl.innerHTML;
 
@@ -1035,14 +1206,14 @@
         .then(res => res.json())
         .then(dataRes => {
             if (dataRes.success === false) {
-                alert(dataRes.message || "Không thể đồng bộ với máy chủ!");
+                showToast(dataRes.message || "Không thể đồng bộ với máy chủ!", "error");
                 parentEl.innerHTML = originalContent;
                 refreshData();
             }
         })
         .catch(error => {
             console.error("Lỗi đồng bộ ngầm:", error);
-            alert("Lỗi mạng khi lưu dữ liệu ngầm! Đang tải lại dữ liệu...");
+            showToast("Lỗi kết nối ngầm! Đang tải lại...", "error");
             parentEl.innerHTML = originalContent;
             refreshData();
         });
