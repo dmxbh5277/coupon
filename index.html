@@ -161,6 +161,9 @@
         .btn-admin { background-color: var(--dark); color: white; }
         .btn-admin:hover { background-color: #0f172a; }
 
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #e11d48; }
+
         .btn-secondary { background-color: var(--primary); color: white; margin-top: 8px; }
         .btn-secondary:hover { background-color: var(--primary-hover); }
 
@@ -234,7 +237,6 @@
         }
         .coupon-item:last-child { border-bottom: none; }
 
-        /* MÃ ĐÃ NHẬN: LÀM MỜ VÀ ĐỔI BACKGROUND */
         .coupon-item.claimed {
             opacity: 0.6;
             background: #f8fafc;
@@ -255,7 +257,6 @@
             color: #64748b;
         }
 
-        /* KHỐI THÔNG TIN NGƯỜI NHẬN & THỜI GIAN */
         .claimed-info {
             display: flex;
             flex-direction: column;
@@ -273,7 +274,7 @@
         }
 
         .claimed-time {
-            font-size: 11px; /* KÍCH THƯỚC NHỎ HƠN */
+            font-size: 11px;
             color: var(--text-muted);
             margin-top: 2px;
         }
@@ -379,7 +380,7 @@
         </div>
         
         <div id="loadingText" class="loading-spinner" style="display:none;">
-            <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary)"></i> Đang đồng bộ kiểm tra dữ liệu hạn dùng...
+            <i class="fa-solid fa-spinner fa-spin" style="color: var(--primary)"></i> Đang đồng bộ kiểm tra dữ liệu...
         </div>
         
         <div id="resultArea"></div>
@@ -438,9 +439,17 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
+            <!-- TÍNH NĂNG XÓA COUPON ĐÃ SỬ DỤNG TRONG SHEET TEXT -->
+            <div class="admin-section-title"><i class="fa-solid fa-broom"></i> Quản lý Sheet TextCoupons</div>
+            <button class="btn-danger" onclick="handleDeleteUsedTextCoupons()" style="margin-bottom: 12px;">
+                <i class="fa-solid fa-trash-can"></i> Xóa Coupon Text Đã Sử Dụng
+            </button>
+
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
             <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel gốc & Hạn dùng</div>
 
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực:</label>
+            <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực (Chỉ áp dụng cho mã Excel):</label>
             <div class="input-group" style="margin-bottom: 10px;">
                 <i class="fa-solid fa-calendar-days"></i>
                 <input type="datetime-local" id="expireDate">
@@ -607,7 +616,7 @@
                 targetExpireTime = null;
             }
 
-            applyLockState();
+            validateUser();
             updateAdminDashboard();
             if (document.getElementById("searchKey").value.trim()) searchCoupon();
 
@@ -623,30 +632,8 @@
             let nowTime = new Date().getTime();
             if (nowTime >= targetExpireTime) {
                 isSystemExpired = true;
-                applyLockState();
+                if (document.getElementById("searchKey").value.trim()) searchCoupon();
             }
-        }
-    }
-
-    function applyLockState() {
-        const userNameInput = document.getElementById("userName");
-        const searchInput = document.getElementById("searchKey");
-        const resultArea = document.getElementById("resultArea");
-
-        if (isSystemExpired) {
-            userNameInput.disabled = true;
-            userNameInput.value = "";
-            userNameInput.placeholder = "HỆ THỐNG ĐÃ KHÓA: Chương trình đã hết hạn!";
-            
-            searchInput.disabled = true;
-            searchInput.value = "";
-            searchInput.placeholder = "Hạn nhận mã đã đóng...";
-            
-            resultArea.innerHTML = "<div class='loading-spinner' style='color:var(--danger);font-weight:600;'><i class='fa-solid fa-clock-rotate-left'></i> Đợt nhận coupon này đã kết thúc! Hệ thống tra cứu đã tự động khóa.</div>";
-        } else {
-            userNameInput.disabled = false;
-            userNameInput.placeholder = "Nhập User...";
-            validateUser(); 
         }
     }
 
@@ -655,8 +642,6 @@
     }
 
     function validateUser() {
-        if (isSystemExpired) return; 
-
         const userNameInput = document.getElementById("userName");
         const searchInput = document.getElementById("searchKey");
         const resultArea = document.getElementById("resultArea");
@@ -756,6 +741,48 @@
         });
     }
 
+    // TÍNH NĂNG XÓA COUPON TEXT ĐÃ SỬ DỤNG (YÊU CẦU MẬT KHẨU 53136)
+    async function handleDeleteUsedTextCoupons() {
+        const password = prompt("Nhập mật khẩu quản trị để thực hiện xóa:");
+        if (!password) return;
+        if (password !== "53136") {
+            alert("Mật khẩu không đúng!");
+            return;
+        }
+
+        if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ Coupon đã sử dụng trong Sheet TextCoupons?")) return;
+
+        const statusDiv = document.getElementById("adminStatus");
+        statusDiv.className = "";
+        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang tiến hành xóa coupon đã dùng...";
+
+        const formData = new URLSearchParams();
+        formData.append("action", "deleteUsedTextCoupons");
+        formData.append("password", password);
+
+        try {
+            let res = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+            let data = await res.json();
+            if (data.success) {
+                showToast(data.message, "success");
+                statusDiv.className = "status-success";
+                statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> ${data.message}`;
+                await refreshData();
+            } else {
+                showToast(data.message, "error");
+                statusDiv.className = "status-error";
+                statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${data.message}`;
+            }
+        } catch (err) {
+            statusDiv.className = "status-error";
+            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi xử lý xóa!";
+        }
+    }
+
+    // UPLOAD EXCEL GỐC (YÊU CẦU MẬT KHẨU 53136)
     async function handleUpload() {
         const fileInput = document.getElementById("excelFile");
         const expireDateInput = document.getElementById("expireDate").value; 
@@ -763,6 +790,13 @@
 
         if (!expireDateInput) return alert("Vui lòng chọn ngày giờ hiệu lực!");
         if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
+
+        const password = prompt("Nhập mật khẩu quản trị để Upload:");
+        if (!password) return;
+        if (password !== "53136") {
+            alert("Mật khẩu không đúng!");
+            return;
+        }
 
         statusDiv.className = "";
         statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang nạp thư viện xử lý...";
@@ -789,21 +823,28 @@
             const formData = new URLSearchParams();
             formData.append("action", "uploadData");
             formData.append("expireDate", expireDateInput); 
+            formData.append("password", password);
             formData.append("data", JSON.stringify(rawJson));
 
             fetch(API_URL, {
                 method: "POST",
-                mode: "no-cors", 
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: formData.toString()
-            }).then(() => {
-                statusDiv.className = "status-success";
-                statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ dữ liệu thành công!";
-                showToast("Đã cập nhật dữ liệu Excel thành công!", "success");
-                setTimeout(async () => {
-                    await refreshData();
-                    closeAdminModal();
-                }, 1500);
+                body: formData
+            })
+            .then(res => res.json())
+            .then(dataRes => {
+                if (dataRes.success) {
+                    statusDiv.className = "status-success";
+                    statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ dữ liệu thành công!";
+                    showToast("Đã cập nhật dữ liệu Excel thành công!", "success");
+                    setTimeout(async () => {
+                        await refreshData();
+                        closeAdminModal();
+                    }, 1500);
+                } else {
+                    statusDiv.className = "status-error";
+                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${dataRes.message}`;
+                    showToast(dataRes.message, "error");
+                }
             }).catch(err => {
                 statusDiv.className = "status-error";
                 statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối: " + err;
@@ -817,10 +858,7 @@
         searchDebounceTimer = setTimeout(searchCoupon, 250);
     }
 
-    /* TÌM KIẾM & HIỂN THỊ CẢ MÃ CHƯA NHẬN VÀ ĐÃ NHẬN (LÀM MỜ) */
     function searchCoupon() {
-        if (isSystemExpired) return;
-
         const keyword = document.getElementById("searchKey").value.toLowerCase().trim();
         const resultArea = document.getElementById("resultArea");
         resultArea.innerHTML = "";
@@ -830,7 +868,6 @@
         let grouped = {};
         let hasMatch = false;
 
-        // Quét lấy TẤT CẢ mã phù hợp sản phẩm (kể cả đã claimed)
         localData.forEach(item => {
             if (item.productName && item.productName.toLowerCase().includes(keyword)) {
                 if (!grouped[item.productName]) grouped[item.productName] = [];
@@ -848,7 +885,6 @@
             let cardDiv = document.createElement("div");
             cardDiv.className = "product-card";
             
-            // Ưu tiên đưa mã CHƯA NHẬN lên trên, mã ĐÃ NHẬN xuống dưới
             grouped[prodName].sort((a, b) => (a.claimedBy ? 1 : 0) - (b.claimedBy ? 1 : 0));
 
             let html = `<div class="product-title"><i class="fa-solid fa-box-open" style="color:var(--primary);"></i> ${prodName}</div>`;
@@ -856,7 +892,10 @@
             
             grouped[prodName].forEach(item => {
                 const isClaimed = !!item.claimedBy;
-                const itemClass = isClaimed ? "coupon-item claimed" : "coupon-item";
+                const isExcelItem = item.sourceSheet === 1;
+                const isExcelExpired = isExcelItem && isSystemExpired; // Chỉ kiểm tra hết hạn nếu là mã Excel
+                
+                const itemClass = (isClaimed || isExcelExpired) ? "coupon-item claimed" : "coupon-item";
                 
                 let actionHtml = "";
                 if (isClaimed) {
@@ -866,9 +905,15 @@
                             <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${item.claimedAt || 'Đã nhận'}</span>
                         </div>
                     `;
+                } else if (isExcelExpired) {
+                    actionHtml = `
+                        <div class="claimed-info">
+                            <span class="claimed-user" style="color: var(--danger);"><i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn</span>
+                        </div>
+                    `;
                 } else {
                     actionHtml = `
-                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', this)">
+                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', ${item.sourceSheet}, this)">
                             <i class="fa-solid fa-copy"></i> Nhận Mã
                         </button>
                     `;
@@ -888,9 +933,10 @@
         }
     }
 
-    /* NHẬN MÃ: CẬP NHẬT GIAO DIỆN LÀM MỜ VÀ THỜI GIAN NHẬN */
-    function copyAndClaim(couponCode, buttonEl) {
-        if (isSystemExpired) return alert("Hệ thống đã hết hạn!");
+    function copyAndClaim(couponCode, sourceSheet, buttonEl) {
+        if (sourceSheet === 1 && isSystemExpired) {
+            return alert("Mã coupon thuộc file Excel này đã hết thời gian hiệu lực!");
+        }
         
         const user = document.getElementById("userName").value.trim();
         if (!user) {
@@ -898,7 +944,6 @@
             return;
         }
 
-        // Định dạng thời gian: Giờ:Phút Ngày/Tháng/Năm
         const now = new Date();
         const formattedTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
 
@@ -910,7 +955,6 @@
 
         showToast(`Đã sao chép mã: ${couponCode}`, 'success');
 
-        // Cập nhật DOM trực tiếp (Optimistic UI)
         const parentEl = buttonEl.closest('.coupon-item');
         if (parentEl) {
             parentEl.classList.add('claimed');
@@ -922,7 +966,6 @@
             `;
         }
 
-        // Cập nhật State cục bộ
         localData = localData.map(item => {
             if (item.coupon === couponCode) {
                 item.claimedBy = user;
@@ -933,7 +976,6 @@
 
         updateAdminDashboard();
 
-        // Gửi thông tin kèm theo thời gian claimedAt lên Google Sheet
         fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({
