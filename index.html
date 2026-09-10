@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Tối ưu riêng cho iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Hệ Thống Lọc & Nhận Coupon Cao Cấp</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tải Font Awesome asynchronously để tránh cản trở Render trên iOS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
     <style>
         :root {
@@ -52,6 +59,7 @@
             border-radius: 24px; 
             box-shadow: 0 20px 40px -15px rgba(2, 132, 199, 0.12);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             position: relative;
         }
 
@@ -133,7 +141,7 @@
         .admin-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; 
             height: 100vh; height: 100dvh; background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px); z-index: 1000; justify-content: center;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center;
             align-items: center; padding: 16px;
         }
 
@@ -439,7 +447,6 @@
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
-            <!-- TÍNH NĂNG XÓA COUPON ĐÃ SỬ DỤNG TRONG SHEET TEXT -->
             <div class="admin-section-title"><i class="fa-solid fa-broom"></i> Quản lý Sheet TextCoupons</div>
             <button class="btn-danger" onclick="handleDeleteUsedTextCoupons()" style="margin-bottom: 12px;">
                 <i class="fa-solid fa-trash-can"></i> Xóa Coupon Text Đã Sử Dụng
@@ -476,10 +483,59 @@
     let searchDebounceTimer = null;
     let isXLSXLoading = false;
 
-    window.onload = async function() {
-        await refreshData();
+    // TỐI ƯU HÓA LOAD WEB TỨC THÌ VỚI STALE-WHILE-REVALIDATE
+    window.onload = function() {
+        // 1. Đọc và render ngay lập tức từ bộ nhớ đệm LocalStorage (<0.2s)
+        const cachedStr = localStorage.getItem("CACHED_COUPONS_DATA");
+        if (cachedStr) {
+            try {
+                const cachedData = JSON.parse(cachedStr);
+                applyDataToUI(cachedData);
+            } catch (e) {
+                console.error("Lỗi parse Cache Local:", e);
+            }
+        }
+        
+        // 2. Đồng bộ ngầm dữ liệu mới nhất từ Server
+        refreshData(!cachedStr);
         setInterval(checkTimeRealtime, 5000);
     };
+
+    function applyDataToUI(dataObj) {
+        localData = dataObj.coupons || [];
+        let cloudExpireDate = dataObj.expireDate || "";
+        isSystemExpired = dataObj.isExpired || false;
+        
+        if (cloudExpireDate) {
+            document.getElementById("expireDate").value = cloudExpireDate;
+            targetExpireTime = new Date(cloudExpireDate.replace('T', ' ').replace(/-/g, '/')).getTime();
+        } else {
+            targetExpireTime = null;
+        }
+
+        validateUser();
+        updateAdminDashboard();
+        if (document.getElementById("searchKey").value.trim()) searchCoupon();
+    }
+
+    async function refreshData(showSpinner = false) {
+        if (showSpinner) showLoading(true);
+        try {
+            let response = await fetch(API_URL);
+            let resultObject = await response.json();
+            
+            // Lưu dữ liệu mới vào LocalStorage
+            localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify(resultObject));
+            
+            // Cập nhật lên UI
+            applyDataToUI(resultObject);
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu:", error);
+            if (showSpinner) showToast("Lỗi đồng bộ dữ liệu!", "error");
+        }
+        if (showSpinner) showLoading(false);
+    }
 
     async function ensureXLSXLoaded() {
         if (window.XLSX) return true;
@@ -599,34 +655,6 @@
         }
     }
 
-    async function refreshData() {
-        showLoading(true);
-        try {
-            let response = await fetch(API_URL);
-            let resultObject = await response.json();
-            
-            localData = resultObject.coupons || [];
-            let cloudExpireDate = resultObject.expireDate || "";
-            isSystemExpired = resultObject.isExpired || false;
-            
-            if (cloudExpireDate) {
-                document.getElementById("expireDate").value = cloudExpireDate;
-                targetExpireTime = new Date(cloudExpireDate.replace('T', ' ').replace(/-/g, '/')).getTime();
-            } else {
-                targetExpireTime = null;
-            }
-
-            validateUser();
-            updateAdminDashboard();
-            if (document.getElementById("searchKey").value.trim()) searchCoupon();
-
-        } catch (error) {
-            console.error("Lỗi tải dữ liệu:", error);
-            showToast("Lỗi đồng bộ dữ liệu!", "error");
-        }
-        showLoading(false);
-    }
-
     function checkTimeRealtime() {
         if (targetExpireTime && !isSystemExpired) {
             let nowTime = new Date().getTime();
@@ -733,7 +761,7 @@
             statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Đã thêm ${parsedCoupons.length} mã duy nhất vào Sheet.`;
             showToast(`Thành công thêm ${parsedCoupons.length} mã!`, 'success');
             document.getElementById("rawTextCoupons").value = "";
-            setTimeout(refreshData, 1200);
+            setTimeout(() => refreshData(false), 1200);
         }).catch(err => {
             statusDiv.className = "status-error";
             statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + err;
@@ -741,7 +769,6 @@
         });
     }
 
-    // TÍNH NĂNG XÓA COUPON TEXT ĐÃ SỬ DỤNG (YÊU CẦU MẬT KHẨU 53136)
     async function handleDeleteUsedTextCoupons() {
         const password = prompt("Nhập mật khẩu quản trị để thực hiện xóa:");
         if (!password) return;
@@ -761,16 +788,13 @@
         formData.append("password", password);
 
         try {
-            let res = await fetch(API_URL, {
-                method: "POST",
-                body: formData
-            });
+            let res = await fetch(API_URL, { method: "POST", body: formData });
             let data = await res.json();
             if (data.success) {
                 showToast(data.message, "success");
                 statusDiv.className = "status-success";
                 statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> ${data.message}`;
-                await refreshData();
+                await refreshData(false);
             } else {
                 showToast(data.message, "error");
                 statusDiv.className = "status-error";
@@ -782,7 +806,6 @@
         }
     }
 
-    // UPLOAD EXCEL GỐC (YÊU CẦU MẬT KHẨU 53136)
     async function handleUpload() {
         const fileInput = document.getElementById("excelFile");
         const expireDateInput = document.getElementById("expireDate").value; 
@@ -826,10 +849,7 @@
             formData.append("password", password);
             formData.append("data", JSON.stringify(rawJson));
 
-            fetch(API_URL, {
-                method: "POST",
-                body: formData
-            })
+            fetch(API_URL, { method: "POST", body: formData })
             .then(res => res.json())
             .then(dataRes => {
                 if (dataRes.success) {
@@ -837,9 +857,9 @@
                     statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ dữ liệu thành công!";
                     showToast("Đã cập nhật dữ liệu Excel thành công!", "success");
                     setTimeout(async () => {
-                        await refreshData();
+                        await refreshData(false);
                         closeAdminModal();
-                    }, 1500);
+                    }, 1200);
                 } else {
                     statusDiv.className = "status-error";
                     statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${dataRes.message}`;
@@ -855,7 +875,7 @@
 
     function debouncedSearchCoupon() {
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(searchCoupon, 250);
+        searchDebounceTimer = setTimeout(searchCoupon, 200);
     }
 
     function searchCoupon() {
@@ -893,7 +913,7 @@
             grouped[prodName].forEach(item => {
                 const isClaimed = !!item.claimedBy;
                 const isExcelItem = item.sourceSheet === 1;
-                const isExcelExpired = isExcelItem && isSystemExpired; // Chỉ kiểm tra hết hạn nếu là mã Excel
+                const isExcelExpired = isExcelItem && isSystemExpired;
                 
                 const itemClass = (isClaimed || isExcelExpired) ? "coupon-item claimed" : "coupon-item";
                 
@@ -955,6 +975,7 @@
 
         showToast(`Đã sao chép mã: ${couponCode}`, 'success');
 
+        // Optimistic UI Update - Cập nhật giao diện lập tức
         const parentEl = buttonEl.closest('.coupon-item');
         if (parentEl) {
             parentEl.classList.add('claimed');
@@ -974,8 +995,16 @@
             return item;
         });
 
+        // Lưu bản vá tạm vào LocalStorage
+        localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({
+            coupons: localData,
+            expireDate: document.getElementById("expireDate").value || "",
+            isExpired: isSystemExpired
+        }));
+
         updateAdminDashboard();
 
+        // Gửi lệnh đồng bộ lên Server
         fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({
@@ -989,13 +1018,13 @@
         .then(dataRes => {
             if (dataRes.success === false) {
                 showToast(dataRes.message || "Không thể đồng bộ với máy chủ!", "error");
-                refreshData();
+                refreshData(false);
             }
         })
         .catch(error => {
             console.error("Lỗi đồng bộ ngầm:", error);
             showToast("Lỗi kết nối ngầm! Đang tải lại...", "error");
-            refreshData();
+            refreshData(false);
         });
     }
 
