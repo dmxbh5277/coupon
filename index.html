@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Tối ưu riêng cho iOS Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Hệ Thống Lọc & Nhận Coupon Cao Cấp</title>
@@ -12,7 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tải Font Awesome asynchronously để tránh cản trở Render trên iOS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     
@@ -363,9 +361,14 @@
     <button class="btn-toggle-admin" onclick="openTextModal()">
         <i class="fa-solid fa-paste"></i> LỌC VÀ UPDATE PMH
     </button>
-    <button class="btn-toggle-admin" onclick="openAdminModal()">
-        <i class="fa-solid fa-chart-pie"></i> THỐNG KÊ
-    </button>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn-toggle-admin" onclick="openAdminModal()">
+            <i class="fa-solid fa-chart-pie"></i> THỐNG KÊ
+        </button>
+        <button class="btn-toggle-admin" onclick="handleManualUpdate(this)">
+            <i class="fa-solid fa-rotate"></i> CẬP NHẬT
+        </button>
+    </div>
 </div>
 
 <div class="container">
@@ -475,7 +478,8 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxnlrz68NXUUAZ4pt6alk4YRdzvMIwbYMyzVkakwlykDntCxV7npG_BeevogQFln_W4/exec"; 
+    // DÁN URL MỚI TỪ APPSCRIPT VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbyelpDARRrPc0loyi45T3BNypYVArjzbx6lUkVJ4Rl4iudUmkQ8f_rbf_CrSed5G4jj/exec"; 
     
     let localData = []; 
     let isSystemExpired = false;
@@ -483,9 +487,7 @@
     let searchDebounceTimer = null;
     let isXLSXLoading = false;
 
-    // TỐI ƯU HÓA LOAD WEB TỨC THÌ VỚI STALE-WHILE-REVALIDATE
     window.onload = function() {
-        // 1. Đọc và render ngay lập tức từ bộ nhớ đệm LocalStorage (<0.2s)
         const cachedStr = localStorage.getItem("CACHED_COUPONS_DATA");
         if (cachedStr) {
             try {
@@ -496,10 +498,20 @@
             }
         }
         
-        // 2. Đồng bộ ngầm dữ liệu mới nhất từ Server
         refreshData(!cachedStr);
         setInterval(checkTimeRealtime, 5000);
     };
+
+    async function handleManualUpdate(btnElement) {
+        const icon = btnElement ? btnElement.querySelector('i') : null;
+        if (icon) icon.classList.add('fa-spin');
+        
+        showToast("Đang cập nhật dữ liệu từ Sheet...", "info");
+        await refreshData(true);
+        
+        if (icon) icon.classList.remove('fa-spin');
+        showToast("Đã cập nhật dữ liệu mới nhất!", "success");
+    }
 
     function applyDataToUI(dataObj) {
         localData = dataObj.coupons || [];
@@ -521,13 +533,14 @@
     async function refreshData(showSpinner = false) {
         if (showSpinner) showLoading(true);
         try {
-            let response = await fetch(API_URL);
+            // Thêm Cache-Buster timestamp để tránh lưu cache cũ
+            const cacheBuster = "_t=" + new Date().getTime();
+            const fetchUrl = API_URL.includes("?") ? `${API_URL}&${cacheBuster}` : `${API_URL}?${cacheBuster}`;
+
+            let response = await fetch(fetchUrl);
             let resultObject = await response.json();
             
-            // Lưu dữ liệu mới vào LocalStorage
             localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify(resultObject));
-            
-            // Cập nhật lên UI
             applyDataToUI(resultObject);
 
         } catch (error) {
@@ -870,7 +883,7 @@
                 statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối: " + err;
             });
         };
-        reader.readAsArrayBuffer(file);
+        reader.readAsBuffer(file);
     }
 
     function debouncedSearchCoupon() {
@@ -975,7 +988,6 @@
 
         showToast(`Đã sao chép mã: ${couponCode}`, 'success');
 
-        // Optimistic UI Update - Cập nhật giao diện lập tức
         const parentEl = buttonEl.closest('.coupon-item');
         if (parentEl) {
             parentEl.classList.add('claimed');
@@ -995,7 +1007,6 @@
             return item;
         });
 
-        // Lưu bản vá tạm vào LocalStorage
         localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({
             coupons: localData,
             expireDate: document.getElementById("expireDate").value || "",
@@ -1004,7 +1015,6 @@
 
         updateAdminDashboard();
 
-        // Gửi lệnh đồng bộ lên Server
         fetch(API_URL, {
             method: "POST",
             body: JSON.stringify({
