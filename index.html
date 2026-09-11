@@ -61,30 +61,35 @@
             position: relative;
         }
 
+        /* Tối ưu Top Navbar hiển thị 3 nút ngang hàng */
         .top-navbar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
             width: 100%;
             max-width: 680px;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-toggle-admin {
-            width: auto;
+            flex: 1 1 0px;
+            min-width: 0;
             background: #ffffff;
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: 10px 16px;
+            padding: 11px 8px;
             border-radius: 12px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-toggle-admin:active { transform: scale(0.98); }
@@ -315,10 +320,23 @@
         .toast-error { background: #881337; color: #fecdd3; }
         .toast-info { background: #0f172a; color: #f1f5f9; }
 
+        /* Media Query tối ưu hóa hiển thị Mobile */
         @media (max-width: 576px) {
             body { padding: 16px 12px; }
             .container { padding: 20px 14px; border-radius: 20px; }
             .app-header h2 { font-size: 22px; }
+
+            /* Tối ưu 3 nút top navbar cho mobile */
+            .top-navbar { gap: 5px; }
+            .btn-toggle-admin { 
+                font-size: 11px; 
+                padding: 10px 2px; 
+                gap: 4px; 
+                border-radius: 10px;
+            }
+            .btn-toggle-admin i {
+                font-size: 12px;
+            }
 
             input[type="text"], input[type="password"], input[type="datetime-local"], textarea {
                 font-size: 16px !important; padding: 12px 12px 12px 42px;
@@ -349,9 +367,11 @@
             .stat-card .stat-value { font-size: 18px; }
             .stat-card .stat-label { font-size: 10px; }
 
-            .top-navbar { flex-wrap: wrap; }
-            .top-navbar .btn-toggle-admin { font-size: 13px; padding: 8px 12px; }
             .toast-container { bottom: 16px; }
+        }
+
+        @media (max-width: 360px) {
+            .btn-toggle-admin { font-size: 10px; padding: 8px 1px; gap: 3px; }
         }
     </style>
 </head>
@@ -359,16 +379,14 @@
 
 <div class="top-navbar">
     <button class="btn-toggle-admin" onclick="openTextModal()">
-        <i class="fa-solid fa-paste"></i> LỌC VÀ UPDATE PMH
+        <i class="fa-solid fa-paste"></i> LỌC & UPDATE PMH
     </button>
-    <div style="display: flex; gap: 8px;">
-        <button class="btn-toggle-admin" onclick="openAdminModal()">
-            <i class="fa-solid fa-chart-pie"></i> THỐNG KÊ
-        </button>
-        <button class="btn-toggle-admin" onclick="handleManualUpdate(this)">
-            <i class="fa-solid fa-rotate"></i> CẬP NHẬT
-        </button>
-    </div>
+    <button class="btn-toggle-admin" onclick="openAdminModal()">
+        <i class="fa-solid fa-chart-pie"></i> THỐNG KÊ
+    </button>
+    <button class="btn-toggle-admin" onclick="handleManualUpdate(this)">
+        <i class="fa-solid fa-rotate"></i> CẬP NHẬT
+    </button>
 </div>
 
 <div class="container">
