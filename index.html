@@ -473,23 +473,6 @@
                 <i class="fa-solid fa-trash-can"></i> Xóa PMH Vùng Đã Sử Dụng
             </button>
 
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-
-            <div class="admin-section-title"><i class="fa-solid fa-cloud-arrow-up"></i> Cập nhật kho Excel gốc & Hạn dùng</div>
-
-            <label class="input-label"><i class="fa-solid fa-clock"></i> Chọn ngày & giờ hết hiệu lực (Chỉ áp dụng cho mã Excel):</label>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <i class="fa-solid fa-calendar-days"></i>
-                <input type="datetime-local" id="expireDate">
-            </div>
-            
-            <div class="file-upload-wrapper">
-                <input type="file" id="excelFile" accept=".xlsx, .xls">
-            </div>
-            
-            <button class="btn-admin" onclick="handleUpload()">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Tải File Excel Gốc
-            </button>
             <div id="adminStatus"></div>
         </div>
     </div>
@@ -500,10 +483,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyelpDARRrPc0loyi45T3BNypYVArjzbx6lUkVJ4Rl4iudUmkQ8f_rbf_CrSed5G4jj/exec"; 
     
     let localData = []; 
-    let isSystemExpired = false;
-    let targetExpireTime = null;
     let searchDebounceTimer = null;
-    let isXLSXLoading = false;
 
     window.onload = function() {
         const cachedStr = localStorage.getItem("CACHED_COUPONS_DATA");
@@ -517,7 +497,6 @@
         }
         
         refreshData(!cachedStr);
-        setInterval(checkTimeRealtime, 5000);
     };
 
     async function handleManualUpdate(btnElement) {
@@ -533,15 +512,6 @@
 
     function applyDataToUI(dataObj) {
         localData = dataObj.coupons || [];
-        let cloudExpireDate = dataObj.expireDate || "";
-        isSystemExpired = dataObj.isExpired || false;
-        
-        if (cloudExpireDate) {
-            document.getElementById("expireDate").value = cloudExpireDate;
-            targetExpireTime = new Date(cloudExpireDate.replace('T', ' ').replace(/-/g, '/')).getTime();
-        } else {
-            targetExpireTime = null;
-        }
 
         validateUser();
         updateAdminDashboard();
@@ -566,24 +536,6 @@
             if (showSpinner) showToast("Lỗi đồng bộ dữ liệu!", "error");
         }
         if (showSpinner) showLoading(false);
-    }
-
-    async function ensureXLSXLoaded() {
-        if (window.XLSX) return true;
-        if (isXLSXLoading) {
-            while (!window.XLSX) {
-                await new Promise(r => setTimeout(r, 100));
-            }
-            return true;
-        }
-        isXLSXLoading = true;
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
-            script.onload = () => { isXLSXLoading = false; resolve(true); };
-            script.onerror = (err) => { isXLSXLoading = false; reject(err); };
-            document.head.appendChild(script);
-        });
     }
 
     function showToast(message, type = 'info') {
@@ -683,16 +635,6 @@
                 </span>
             `;
             listContainer.appendChild(itemDiv);
-        }
-    }
-
-    function checkTimeRealtime() {
-        if (targetExpireTime && !isSystemExpired) {
-            let nowTime = new Date().getTime();
-            if (nowTime >= targetExpireTime) {
-                isSystemExpired = true;
-                if (document.getElementById("searchKey").value.trim()) searchCoupon();
-            }
         }
     }
 
@@ -837,73 +779,6 @@
         }
     }
 
-    async function handleUpload() {
-        const fileInput = document.getElementById("excelFile");
-        const expireDateInput = document.getElementById("expireDate").value; 
-        const statusDiv = document.getElementById("adminStatus");
-
-        if (!expireDateInput) return alert("Vui lòng chọn ngày giờ hiệu lực!");
-        if (fileInput.files.length === 0) return alert("Bạn chưa chọn file Excel nào!");
-
-        const password = prompt("Nhập mật khẩu quản trị để Upload:");
-        if (!password) return;
-        if (password !== "53136") {
-            alert("Mật khẩu không đúng!");
-            return;
-        }
-
-        statusDiv.className = "";
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang nạp thư viện xử lý...";
-
-        try {
-            await ensureXLSXLoaded();
-        } catch (error) {
-            statusDiv.className = "status-error";
-            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi nạp thư viện Excel!";
-            return;
-        }
-
-        statusDiv.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang tải kho Excel gốc...";
-        
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rawJson = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
-            const formData = new URLSearchParams();
-            formData.append("action", "uploadData");
-            formData.append("expireDate", expireDateInput); 
-            formData.append("password", password);
-            formData.append("data", JSON.stringify(rawJson));
-
-            fetch(API_URL, { method: "POST", body: formData })
-            .then(res => res.json())
-            .then(dataRes => {
-                if (dataRes.success) {
-                    statusDiv.className = "status-success";
-                    statusDiv.innerHTML = "<i class='fa-solid fa-circle-check'></i> Đồng bộ dữ liệu thành công!";
-                    showToast("Đã cập nhật dữ liệu Excel thành công!", "success");
-                    setTimeout(async () => {
-                        await refreshData(false);
-                        closeAdminModal();
-                    }, 1200);
-                } else {
-                    statusDiv.className = "status-error";
-                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${dataRes.message}`;
-                    showToast(dataRes.message, "error");
-                }
-            }).catch(err => {
-                statusDiv.className = "status-error";
-                statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi kết nối: " + err;
-            });
-        };
-        reader.readAsBuffer(file);
-    }
-
     function debouncedSearchCoupon() {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(searchCoupon, 200);
@@ -943,10 +818,7 @@
             
             grouped[prodName].forEach(item => {
                 const isClaimed = !!item.claimedBy;
-                const isExcelItem = item.sourceSheet === 1;
-                const isExcelExpired = isExcelItem && isSystemExpired;
-                
-                const itemClass = (isClaimed || isExcelExpired) ? "coupon-item claimed" : "coupon-item";
+                const itemClass = isClaimed ? "coupon-item claimed" : "coupon-item";
                 
                 let actionHtml = "";
                 if (isClaimed) {
@@ -956,15 +828,9 @@
                             <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${item.claimedAt || 'Đã nhận'}</span>
                         </div>
                     `;
-                } else if (isExcelExpired) {
-                    actionHtml = `
-                        <div class="claimed-info">
-                            <span class="claimed-user" style="color: var(--danger);"><i class="fa-solid fa-clock-rotate-left"></i> Đã hết hạn</span>
-                        </div>
-                    `;
                 } else {
                     actionHtml = `
-                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', ${item.sourceSheet}, this)">
+                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', this)">
                             <i class="fa-solid fa-copy"></i> Nhận Mã
                         </button>
                     `;
@@ -984,11 +850,7 @@
         }
     }
 
-    function copyAndClaim(couponCode, sourceSheet, buttonEl) {
-        if (sourceSheet === 1 && isSystemExpired) {
-            return alert("Mã coupon thuộc file Excel này đã hết thời gian hiệu lực!");
-        }
-        
+    function copyAndClaim(couponCode, buttonEl) {
         const user = document.getElementById("userName").value.trim();
         if (!user) {
             alert("Vui lòng điền tên trước khi nhận mã!");
@@ -1026,9 +888,7 @@
         });
 
         localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({
-            coupons: localData,
-            expireDate: document.getElementById("expireDate").value || "",
-            isExpired: isSystemExpired
+            coupons: localData
         }));
 
         updateAdminDashboard();
