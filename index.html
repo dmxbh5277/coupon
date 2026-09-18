@@ -61,7 +61,6 @@
             position: relative;
         }
 
-        /* Tối ưu Top Navbar hiển thị 3 nút ngang hàng */
         .top-navbar {
             display: flex;
             justify-content: space-between;
@@ -220,24 +219,30 @@
         .product-stat-count.badge-unused { background: var(--primary-light); color: var(--primary-hover); }
         .product-stat-count.badge-used { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
 
-        .file-upload-wrapper {
-            margin: 10px 0; padding: 14px; border: 2px dashed var(--border);
-            border-radius: 14px; text-align: center; background: var(--gray-bg);
-        }
-        
-        input[type="file"] { font-size: 13px; color: var(--text-muted); width: 100%; }
-
         .product-card {
             background: #ffffff; border: 1px solid var(--border);
             border-radius: 16px; margin-top: 24px; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
+        /* Tinh chỉnh thanh tiêu đề sản phẩm kèm badge thống kê 6/8 */
         .product-title { 
             font-size: 15px; font-weight: 700; color: var(--dark); 
             background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
         }
+
+        .product-title-left {
+            display: flex; align-items: center; gap: 8px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .product-badge {
+            font-size: 12px; font-weight: 700; padding: 4px 10px;
+            border-radius: 8px; white-space: nowrap;
+        }
+        .product-badge.normal { background: var(--primary-light); color: var(--primary-hover); }
+        .product-badge.depleted { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
 
         .coupon-list { padding: 10px 20px; }
 
@@ -320,13 +325,11 @@
         .toast-error { background: #881337; color: #fecdd3; }
         .toast-info { background: #0f172a; color: #f1f5f9; }
 
-        /* Media Query tối ưu hóa hiển thị Mobile */
         @media (max-width: 576px) {
             body { padding: 16px 12px; }
             .container { padding: 20px 14px; border-radius: 20px; }
             .app-header h2 { font-size: 22px; }
 
-            /* Tối ưu 3 nút top navbar cho mobile */
             .top-navbar { gap: 5px; }
             .btn-toggle-admin { 
                 font-size: 11px; 
@@ -334,9 +337,7 @@
                 gap: 4px; 
                 border-radius: 10px;
             }
-            .btn-toggle-admin i {
-                font-size: 12px;
-            }
+            .btn-toggle-admin i { font-size: 12px; }
 
             input[type="text"], input[type="password"], input[type="datetime-local"], textarea {
                 font-size: 16px !important; padding: 12px 12px 12px 42px;
@@ -479,7 +480,6 @@
 </div>
 
 <script>
-    // DÁN URL MỚI TỪ APPSCRIPT VÀO ĐÂY
     const API_URL = "https://script.google.com/macros/s/AKfycbyelpDARRrPc0loyi45T3BNypYVArjzbx6lUkVJ4Rl4iudUmkQ8f_rbf_CrSed5G4jj/exec"; 
     
     let localData = []; 
@@ -521,7 +521,6 @@
     async function refreshData(showSpinner = false) {
         if (showSpinner) showLoading(true);
         try {
-            // Thêm Cache-Buster timestamp để tránh lưu cache cũ
             const cacheBuster = "_t=" + new Date().getTime();
             const fetchUrl = API_URL.includes("?") ? `${API_URL}&${cacheBuster}` : `${API_URL}?${cacheBuster}`;
 
@@ -813,7 +812,21 @@
             
             grouped[prodName].sort((a, b) => (a.claimedBy ? 1 : 0) - (b.claimedBy ? 1 : 0));
 
-            let html = `<div class="product-title"><i class="fa-solid fa-box-open" style="color:var(--primary);"></i> ${prodName}</div>`;
+            // Tính toán số lượng cho badge 6/8
+            let total = grouped[prodName].length;
+            let remaining = grouped[prodName].filter(item => !item.claimedBy).length;
+            let isDepleted = (remaining === 0);
+            let badgeClass = isDepleted ? "product-badge depleted" : "product-badge normal";
+
+            let html = `
+                <div class="product-title">
+                    <div class="product-title-left">
+                        <i class="fa-solid fa-box-open" style="color:var(--primary);"></i> 
+                        <span title="${prodName}">${prodName}</span>
+                    </div>
+                    <span class="${badgeClass}">${remaining}/${total}</span>
+                </div>
+            `;
             html += `<div class="coupon-list">`;
             
             grouped[prodName].forEach(item => {
