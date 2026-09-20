@@ -208,7 +208,6 @@
 
         .product-stat-item:last-child { border-bottom: none; }
         
-        /* Cập nhật cho phép tên sản phẩm trong Thống kê Admin xuống dòng và căn giữa toàn bộ chiều cao */
         .product-stat-name {
             font-weight: 600; color: var(--dark); 
             word-break: break-word;
@@ -232,11 +231,17 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
-        /* Cập nhật cho phép tiêu đề sản phẩm bên ngoài xuống dòng, căn giữa theo toàn bộ chiều cao */
         .product-title { 
             font-size: 15px; font-weight: 700; color: var(--dark); 
             background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .product-title:hover {
+            background-color: #f1f5f9;
         }
 
         .product-title-left {
@@ -255,7 +260,31 @@
         .product-badge.normal { background: var(--primary-light); color: var(--primary-hover); }
         .product-badge.depleted { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
 
-        .coupon-list { padding: 10px 20px; }
+        .toggle-arrow {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .product-card.expanded .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Hiệu ứng accordion thu gọn/mở rộng danh sách coupon */
+        .coupon-list { 
+            max-height: 0;
+            overflow: hidden;
+            padding: 0 20px;
+            opacity: 0;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+        }
+
+        .product-card.expanded .coupon-list {
+            max-height: 2000px;
+            padding: 10px 20px;
+            opacity: 1;
+        }
 
         .coupon-item { 
             display: flex; justify-content: space-between; align-items: center; 
@@ -367,7 +396,8 @@
                 to { transform: translateY(0); }
             }
 
-            .coupon-list { padding: 8px 14px; }
+            .coupon-list { padding: 0 14px; }
+            .product-card.expanded .coupon-list { padding: 8px 14px; }
             .coupon-item {
                 flex-direction: row !important; justify-content: space-between !important;
                 align-items: center !important; padding: 12px 0;
@@ -794,6 +824,13 @@
         searchDebounceTimer = setTimeout(searchCoupon, 200);
     }
 
+    function toggleProductCard(titleEl) {
+        const card = titleEl.closest('.product-card');
+        if (card) {
+            card.classList.toggle('expanded');
+        }
+    }
+
     function searchCoupon() {
         const keyword = document.getElementById("searchKey").value.toLowerCase().trim();
         const resultArea = document.getElementById("resultArea");
@@ -817,9 +854,13 @@
             return;
         }
 
+        const productKeys = Object.keys(grouped);
+        const isSingleProduct = (productKeys.length === 1);
+
         for (let prodName in grouped) {
             let cardDiv = document.createElement("div");
-            cardDiv.className = "product-card";
+            // Tự động mở sẵn nếu chỉ có đúng 1 sản phẩm kết quả, nhiều hơn thì thu gọn mặc định
+            cardDiv.className = isSingleProduct ? "product-card expanded" : "product-card";
             
             grouped[prodName].sort((a, b) => (a.claimedBy ? 1 : 0) - (b.claimedBy ? 1 : 0));
 
@@ -829,12 +870,15 @@
             let badgeClass = isDepleted ? "product-badge depleted" : "product-badge normal";
 
             let html = `
-                <div class="product-title">
+                <div class="product-title" onclick="toggleProductCard(this)">
                     <div class="product-title-left">
                         <i class="fa-solid fa-box-open" style="color:var(--primary);"></i> 
                         <span title="${prodName}">${prodName}</span>
                     </div>
-                    <span class="${badgeClass}">${remaining}/${total}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="${badgeClass}">${remaining}/${total}</span>
+                        <i class="fa-solid fa-chevron-down toggle-arrow"></i>
+                    </div>
                 </div>
             `;
             html += `<div class="coupon-list">`;
