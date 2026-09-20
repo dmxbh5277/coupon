@@ -203,17 +203,24 @@
         .product-stat-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px;
+            gap: 12px;
         }
 
         .product-stat-item:last-child { border-bottom: none; }
+        
+        /* Cập nhật cho phép tên sản phẩm trong Thống kê Admin xuống dòng và căn giữa toàn bộ chiều cao */
         .product-stat-name {
-            font-weight: 600; color: var(--dark); white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis; max-width: 65%;
+            font-weight: 600; color: var(--dark); 
+            word-break: break-word;
+            overflow-wrap: break-word;
+            flex: 1;
+            min-width: 0;
         }
 
         .product-stat-count {
             font-weight: 700; font-size: 12px; padding: 4px 10px;
             border-radius: 8px; transition: all 0.2s ease; white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .product-stat-count.badge-unused { background: var(--primary-light); color: var(--primary-hover); }
@@ -225,7 +232,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.02);
         }
 
-        /* Tinh chỉnh thanh tiêu đề sản phẩm kèm badge thống kê 6/8 */
+        /* Cập nhật cho phép tiêu đề sản phẩm bên ngoài xuống dòng, căn giữa theo toàn bộ chiều cao */
         .product-title { 
             font-size: 15px; font-weight: 700; color: var(--dark); 
             background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid var(--border);
@@ -234,12 +241,16 @@
 
         .product-title-left {
             display: flex; align-items: center; gap: 8px;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .product-badge {
             font-size: 12px; font-weight: 700; padding: 4px 10px;
             border-radius: 8px; white-space: nowrap;
+            flex-shrink: 0;
         }
         .product-badge.normal { background: var(--primary-light); color: var(--primary-hover); }
         .product-badge.depleted { background: #ffe4e6; color: #e11d48; border: 1px solid #fecdd3; }
@@ -812,7 +823,6 @@
             
             grouped[prodName].sort((a, b) => (a.claimedBy ? 1 : 0) - (b.claimedBy ? 1 : 0));
 
-            // Tính toán số lượng cho badge 6/8
             let total = grouped[prodName].length;
             let remaining = grouped[prodName].filter(item => !item.claimedBy).length;
             let isDepleted = (remaining === 0);
