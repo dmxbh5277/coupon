@@ -139,6 +139,8 @@
         }
 
         button:active { transform: scale(0.98); }
+        /* [MỚI] trạng thái disabled cho nút, dùng khi đang chờ server phản hồi (chống double-click) */
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .admin-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; 
@@ -442,12 +444,12 @@
         
         <div class="input-group">
             <i class="fa-solid fa-user"></i>
-            <input type="text" id="userName" placeholder="Nhập User mới nhận được mã..." oninput="validateUser()">
+            <input type="text" id="userName" maxlength="60" placeholder="Nhập User mới nhận được mã..." oninput="validateUser()">
         </div>
         
         <div class="input-group">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchKey" placeholder="Nhập mã phiếu cần lấy..." oninput="debouncedSearchCoupon()" disabled>
+            <input type="text" id="searchKey" maxlength="100" placeholder="Nhập mã phiếu cần lấy..." oninput="debouncedSearchCoupon()" disabled>
         </div>
         
         <div id="loadingText" class="loading-spinner" style="display:none;">
@@ -472,7 +474,7 @@
         <label class="input-label"><i class="fa-solid fa-database"></i> Dán dữ liệu tin nhắn thô từ DM hoặc danh sách PMH:</label>
         <textarea id="rawTextCoupons" rows="7" placeholder="Dán toàn bộ tin nhắn từ DM vào đây"></textarea>
         
-        <button class="btn-secondary" onclick="handleImportTextCoupons()">
+        <button class="btn-secondary" id="btnImportText" onclick="handleImportTextCoupons()">
             <i class="fa-solid fa-filter-circle-dollar"></i> Lọc Theo User & Bổ Sung Mã Vào Sheet
         </button>
         <div id="textStatus"></div>
@@ -526,6 +528,27 @@
     let localData = []; 
     let searchDebounceTimer = null;
 
+    // [MỚI] Escape mọi giá trị động trước khi chèn vào innerHTML -> chống XSS
+    // Áp dụng cho MỌI nơi hiển thị: tên sản phẩm, mã coupon, người nhận, thông báo từ server...
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return "";
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // [MỚI] Bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
+    function removeVietnameseTones(str) {
+        return String(str)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D');
+    }
+
     window.onload = function() {
         const cachedStr = localStorage.getItem("CACHED_COUPONS_DATA");
         if (cachedStr) {
@@ -552,6 +575,10 @@
     }
 
     function applyDataToUI(dataObj) {
+        if (dataObj && dataObj.error) {
+            showToast(dataObj.message || "Lỗi tải dữ liệu từ Sheet!", "error");
+            return;
+        }
         localData = dataObj.coupons || [];
 
         validateUser();
@@ -567,6 +594,12 @@
 
             let response = await fetch(fetchUrl);
             let resultObject = await response.json();
+
+            if (resultObject && resultObject.error) {
+                showToast(resultObject.message || "Lỗi tải dữ liệu!", "error");
+                if (showSpinner) showLoading(false);
+                return;
+            }
             
             localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify(resultObject));
             applyDataToUI(resultObject);
@@ -594,7 +627,8 @@
         if (type === 'success') iconClass = 'fa-circle-check';
         if (type === 'error') iconClass = 'fa-circle-xmark';
 
-        toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${message}</span>`;
+        // [SỬA] escape message trước khi chèn (message có thể chứa tên người dùng khác từ server)
+        toast.innerHTML = `<i class="fa-solid ${iconClass}"></i> <span>${escapeHtml(message)}</span>`;
         container.appendChild(toast);
 
         requestAnimationFrame(() => toast.classList.add("show"));
@@ -668,8 +702,10 @@
             itemDiv.className = "product-stat-item";
             let badgeStyleClass = (pData.claimed > 0) ? "badge-used" : "badge-unused";
 
+            // [SỬA] escape tên sản phẩm trước khi chèn vào innerHTML
+            const safeName = escapeHtml(pName);
             itemDiv.innerHTML = `
-                <span class="product-stat-name" title="${pName}">${pName}</span>
+                <span class="product-stat-name" title="${safeName}">${safeName}</span>
                 <span class="product-stat-count ${badgeStyleClass}">
                     Còn lại: <b>${pData.remaining}</b> / ${pData.total}
                 </span>
@@ -744,10 +780,14 @@
         return parsedResults;
     }
 
+    // [SỬA] Bỏ mode:"no-cors" -> đọc được response thật từ server, không còn báo "thành công" giả.
+    // [SỬA] Server tự dedup lại theo TOÀN BỘ dữ liệu hiện có (xem handleAppendTextData ở backend),
+    //        nên dù cache client cũ, dữ liệu ghi vào Sheet vẫn không bị trùng.
     function handleImportTextCoupons() {
         const rawContent = document.getElementById("rawTextCoupons").value.trim();
         const keywordsStr = document.getElementById("filterKeywords").value.trim();
         const statusDiv = document.getElementById("textStatus");
+        const btn = document.getElementById("btnImportText");
 
         if (!rawContent) return alert("Vui lòng dán văn bản tin nhắn hoặc danh sách mã coupon vào khung!");
 
@@ -755,10 +795,11 @@
         if (!textToParse.trim()) return alert("Không tìm thấy mã PMH nào khớp với từ khóa đã nhập!");
 
         const parsedCoupons = parseTextCoupons(textToParse);
-        if (parsedCoupons.length === 0) return alert("Tất cả mã đã lọc đều bị trùng lặp hoặc sai định dạng!");
+        if (parsedCoupons.length === 0) return alert("Tất cả mã đã lọc đều bị trùng lặp (theo dữ liệu hiện có trên máy) hoặc sai định dạng!");
 
         statusDiv.className = "";
         statusDiv.innerHTML = `<i class='fa-solid fa-spinner fa-spin'></i> Đang tải lên ${parsedCoupons.length} coupon đã lọc...`;
+        btn.disabled = true;
 
         const formData = new URLSearchParams();
         formData.append("action", "appendTextData");
@@ -766,29 +807,39 @@
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
-        }).then(() => {
-            statusDiv.className = "status-success";
-            statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> Đã thêm ${parsedCoupons.length} mã duy nhất vào Sheet.`;
-            showToast(`Thành công thêm ${parsedCoupons.length} mã!`, 'success');
-            document.getElementById("rawTextCoupons").value = "";
-            setTimeout(() => refreshData(false), 1200);
-        }).catch(err => {
-            statusDiv.className = "status-error";
-            statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + err;
-            showToast("Lỗi tải dữ liệu!", "error");
-        });
+        })
+            .then(res => res.json())
+            .then(dataRes => {
+                if (dataRes.success) {
+                    statusDiv.className = "status-success";
+                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> ${escapeHtml(dataRes.message)}`;
+                    showToast(dataRes.message, 'success');
+                    document.getElementById("rawTextCoupons").value = "";
+                    setTimeout(() => refreshData(false), 1200);
+                } else {
+                    statusDiv.className = "status-error";
+                    statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${escapeHtml(dataRes.message || "Lỗi không xác định!")}`;
+                    showToast(dataRes.message || "Lỗi tải dữ liệu!", "error");
+                }
+            })
+            .catch(err => {
+                statusDiv.className = "status-error";
+                statusDiv.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Lỗi gửi dữ liệu: " + escapeHtml(err.toString());
+                showToast("Lỗi tải dữ liệu!", "error");
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
     }
 
+    // [SỬA] Không còn so mật khẩu ở client (trước đây hardcode "53136" ngay trong source,
+    // ai mở DevTools cũng đọc được). Giờ chỉ prompt rồi gửi lên, server tự đối chiếu
+    // với Script Properties (xem getAdminPassword() ở backend).
     async function handleDeleteUsedTextCoupons() {
         const password = prompt("Nhập mật khẩu quản trị để thực hiện xóa:");
         if (!password) return;
-        if (password !== "53136") {
-            alert("Mật khẩu không đúng!");
-            return;
-        }
 
         if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ Coupon đã sử dụng trong Sheet TextCoupons?")) return;
 
@@ -806,12 +857,12 @@
             if (data.success) {
                 showToast(data.message, "success");
                 statusDiv.className = "status-success";
-                statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> ${data.message}`;
+                statusDiv.innerHTML = `<i class='fa-solid fa-circle-check'></i> ${escapeHtml(data.message)}`;
                 await refreshData(false);
             } else {
                 showToast(data.message, "error");
                 statusDiv.className = "status-error";
-                statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${data.message}`;
+                statusDiv.innerHTML = `<i class='fa-solid fa-circle-xmark'></i> ${escapeHtml(data.message)}`;
             }
         } catch (err) {
             statusDiv.className = "status-error";
@@ -831,18 +882,22 @@
         }
     }
 
+    // [SỬA] Tìm kiếm không phân biệt dấu tiếng Việt (VD: "dieu hoa" vẫn khớp "Điều hòa")
+    // [SỬA] Escape mọi giá trị hiển thị để chống XSS
     function searchCoupon() {
-        const keyword = document.getElementById("searchKey").value.toLowerCase().trim();
+        const rawKeyword = document.getElementById("searchKey").value.trim();
         const resultArea = document.getElementById("resultArea");
         resultArea.innerHTML = "";
 
-        if (!keyword) return;
+        if (!rawKeyword) return;
+
+        const keyword = removeVietnameseTones(rawKeyword.toLowerCase());
 
         let grouped = {};
         let hasMatch = false;
 
         localData.forEach(item => {
-            if (item.productName && item.productName.toLowerCase().includes(keyword)) {
+            if (item.productName && removeVietnameseTones(item.productName.toLowerCase()).includes(keyword)) {
                 if (!grouped[item.productName]) grouped[item.productName] = [];
                 grouped[item.productName].push(item);
                 hasMatch = true;
@@ -869,11 +924,13 @@
             let isDepleted = (remaining === 0);
             let badgeClass = isDepleted ? "product-badge depleted" : "product-badge normal";
 
+            const safeProdName = escapeHtml(prodName);
+
             let html = `
                 <div class="product-title" onclick="toggleProductCard(this)">
                     <div class="product-title-left">
                         <i class="fa-solid fa-box-open" style="color:var(--primary);"></i> 
-                        <span title="${prodName}">${prodName}</span>
+                        <span title="${safeProdName}">${safeProdName}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span class="${badgeClass}">${remaining}/${total}</span>
@@ -886,18 +943,21 @@
             grouped[prodName].forEach(item => {
                 const isClaimed = !!item.claimedBy;
                 const itemClass = isClaimed ? "coupon-item claimed" : "coupon-item";
+                const safeCoupon = escapeHtml(item.coupon);
                 
                 let actionHtml = "";
                 if (isClaimed) {
                     actionHtml = `
                         <div class="claimed-info">
-                            <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${item.claimedBy}</span>
-                            <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${item.claimedAt || 'Đã nhận'}</span>
+                            <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${escapeHtml(item.claimedBy)}</span>
+                            <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${escapeHtml(item.claimedAt || 'Đã nhận')}</span>
                         </div>
                     `;
                 } else {
+                    // [SỬA] dùng data-coupon thay vì chèn thẳng mã vào chuỗi onclick='...'
+                    // -> tránh trường hợp mã chứa ký tự đặc biệt (dấu nháy) làm hỏng thuộc tính onclick
                     actionHtml = `
-                        <button class="btn-copy" onclick="copyAndClaim('${item.coupon}', this)">
+                        <button class="btn-copy" data-coupon="${safeCoupon}" onclick="copyAndClaim(this.dataset.coupon, this)">
                             <i class="fa-solid fa-copy"></i> Nhận Mã
                         </button>
                     `;
@@ -905,7 +965,7 @@
 
                 html += `
                     <div class="${itemClass}">
-                        <span class="coupon-code">${item.coupon}</span>
+                        <span class="coupon-code">${safeCoupon}</span>
                         ${actionHtml}
                     </div>
                 `;
@@ -917,70 +977,80 @@
         }
     }
 
-    function copyAndClaim(couponCode, buttonEl) {
+    // [SỬA HOÀN TOÀN] Trước đây: cập nhật UI + localStorage ngay lập tức (optimistic),
+    // gửi request "ngầm" phía sau, chỉ refresh lại khi lỗi -> 2 người bấm cùng lúc đều
+    // thấy "thành công" dù thực tế bị ghi đè.
+    // Giờ: disable nút ngay để chống double-click, CHỜ server xác nhận thật sự đã
+    // nhận được (server đã có check "đã claimed chưa" ở handleClaimCoupon), rồi mới
+    // cập nhật UI. Nếu server báo đã có người nhận trước -> hiện đúng lỗi + đồng bộ lại.
+    async function copyAndClaim(couponCode, buttonEl) {
         const user = document.getElementById("userName").value.trim();
         if (!user) {
             alert("Vui lòng điền tên trước khi nhận mã!");
             return;
         }
 
-        const now = new Date();
-        const formattedTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('vi-VN');
+        buttonEl.disabled = true;
+        const originalHtml = buttonEl.innerHTML;
+        buttonEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang xử lý...";
 
+        // Copy vào clipboard ngay để không làm chậm trải nghiệm (không phụ thuộc kết quả server)
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(couponCode).catch(() => fallbackCopyTextToClipboard(couponCode));
         } else {
             fallbackCopyTextToClipboard(couponCode);
         }
 
-        showToast(`Đã sao chép mã: ${couponCode}`, 'success');
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "claimCoupon",
+                    coupon: couponCode,
+                    user: user
+                })
+            });
+            const dataRes = await res.json();
 
-        const parentEl = buttonEl.closest('.coupon-item');
-        if (parentEl) {
-            parentEl.classList.add('claimed');
-            buttonEl.outerHTML = `
-                <div class="claimed-info">
-                    <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${user}</span>
-                    <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${formattedTime}</span>
-                </div>
-            `;
+            if (dataRes.success) {
+                showToast(`Đã sao chép & nhận mã: ${couponCode}`, 'success');
+
+                const parentEl = buttonEl.closest('.coupon-item');
+                if (parentEl) {
+                    parentEl.classList.add('claimed');
+                    parentEl.innerHTML = `
+                        <span class="coupon-code">${escapeHtml(couponCode)}</span>
+                        <div class="claimed-info">
+                            <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${escapeHtml(user)}</span>
+                            <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${escapeHtml(dataRes.claimedAt || 'Đã nhận')}</span>
+                        </div>
+                    `;
+                }
+
+                localData = localData.map(item => {
+                    if (item.coupon === couponCode) {
+                        item.claimedBy = user;
+                        item.claimedAt = dataRes.claimedAt || '';
+                    }
+                    return item;
+                });
+
+                localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({ coupons: localData }));
+                updateAdminDashboard();
+
+            } else {
+                // Mã đã bị người khác nhận trước, hoặc lỗi khác từ server
+                showToast(dataRes.message || "Không thể nhận mã, vui lòng thử lại!", "error");
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalHtml;
+                await refreshData(false); // đồng bộ lại để phản ánh đúng trạng thái thật
+            }
+        } catch (err) {
+            console.error("Lỗi khi nhận mã:", err);
+            showToast("Lỗi kết nối, vui lòng thử lại!", "error");
+            buttonEl.disabled = false;
+            buttonEl.innerHTML = originalHtml;
         }
-
-        localData = localData.map(item => {
-            if (item.coupon === couponCode) {
-                item.claimedBy = user;
-                item.claimedAt = formattedTime;
-            }
-            return item;
-        });
-
-        localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({
-            coupons: localData
-        }));
-
-        updateAdminDashboard();
-
-        fetch(API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "claimCoupon",
-                coupon: couponCode,
-                user: user,
-                claimedAt: formattedTime
-            })
-        })
-        .then(res => res.json())
-        .then(dataRes => {
-            if (dataRes.success === false) {
-                showToast(dataRes.message || "Không thể đồng bộ với máy chủ!", "error");
-                refreshData(false);
-            }
-        })
-        .catch(error => {
-            console.error("Lỗi đồng bộ ngầm:", error);
-            showToast("Lỗi kết nối ngầm! Đang tải lại...", "error");
-            refreshData(false);
-        });
     }
 
     function fallbackCopyTextToClipboard(text) {
