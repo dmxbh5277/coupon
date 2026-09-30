@@ -977,12 +977,12 @@
         }
     }
 
-    // [SỬA HOÀN TOÀN] Trước đây: cập nhật UI + localStorage ngay lập tức (optimistic),
-    // gửi request "ngầm" phía sau, chỉ refresh lại khi lỗi -> 2 người bấm cùng lúc đều
-    // thấy "thành công" dù thực tế bị ghi đè.
-    // Giờ: disable nút ngay để chống double-click, CHỜ server xác nhận thật sự đã
-    // nhận được (server đã có check "đã claimed chưa" ở handleClaimCoupon), rồi mới
-    // cập nhật UI. Nếu server báo đã có người nhận trước -> hiện đúng lỗi + đồng bộ lại.
+    // [TỐI ƯU TỐC ĐỘ] Cập nhật giao diện NGAY khi bấm (optimistic) nhưng có XÁC NHẬN + HOÀN TÁC:
+    // - Bấm nút -> hiện luôn "đã nhận" với trạng thái "Đang xác nhận...", gửi request ở nền.
+    // - Server xác nhận -> điền giờ thật, lưu cache, cập nhật dashboard.
+    // - Server từ chối (đã có người nhận trước) hoặc lỗi mạng -> HOÀN TÁC đúng dòng đó,
+    //   báo lỗi rõ ràng (kèm cảnh báo KHÔNG dùng mã vừa sao chép) và đồng bộ lại dữ liệu.
+    // Server vẫn kiểm tra "đã có người nhận chưa" trước khi ghi nên không ai bị ghi đè.
     async function copyAndClaim(couponCode, buttonEl) {
         const user = document.getElementById("userName").value.trim();
         if (!user) {
@@ -990,9 +990,9 @@
             return;
         }
 
-        buttonEl.disabled = true;
-        const originalHtml = buttonEl.innerHTML;
-        buttonEl.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang xử lý...";
+        const parentEl = buttonEl.closest('.coupon-item');
+        if (!parentEl || parentEl.dataset.pending === "1") return; // chống bấm đúp
+        parentEl.dataset.pending = "1";
 
         // Copy vào clipboard ngay để không làm chậm trải nghiệm (không phụ thuộc kết quả server)
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1001,55 +1001,81 @@
             fallbackCopyTextToClipboard(couponCode);
         }
 
+        // Lưu trạng thái cũ để hoàn tác khi cần
+        const originalHtml = parentEl.innerHTML;
+        const originalClass = parentEl.className;
+        const localItem = localData.find(item => item.coupon === couponCode);
+        const prevState = localItem ? { claimedBy: localItem.claimedBy, claimedAt: localItem.claimedAt } : null;
+        const sourceSheet = localItem ? localItem.sourceSheet : undefined;
+
+        // Cập nhật giao diện ngay lập tức
+        parentEl.classList.add('claimed');
+        parentEl.innerHTML = `
+            <span class="coupon-code">${escapeHtml(couponCode)}</span>
+            <div class="claimed-info">
+                <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${escapeHtml(user)}</span>
+                <span class="claimed-time"><i class="fa-solid fa-spinner fa-spin"></i> Đang xác nhận...</span>
+            </div>
+        `;
+        if (localItem) {
+            localItem.claimedBy = user;
+            localItem.claimedAt = "Đang xác nhận...";
+        }
+        showToast(`Đã sao chép mã: ${couponCode}`, 'info');
+
+        // Hoàn tác khi server từ chối / lỗi
+        const rollback = () => {
+            if (localItem && prevState) {
+                localItem.claimedBy = prevState.claimedBy;
+                localItem.claimedAt = prevState.claimedAt;
+            }
+            if (parentEl.isConnected) {
+                parentEl.className = originalClass;
+                parentEl.innerHTML = originalHtml;
+            }
+            delete parentEl.dataset.pending;
+        };
+
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "claimCoupon",
                     coupon: couponCode,
-                    user: user
+                    user: user,
+                    sourceSheet: sourceSheet
                 })
             });
             const dataRes = await res.json();
 
             if (dataRes.success) {
-                showToast(`Đã sao chép & nhận mã: ${couponCode}`, 'success');
+                const claimedAt = dataRes.claimedAt || 'Đã nhận';
+                if (localItem) localItem.claimedAt = dataRes.claimedAt || '';
 
-                const parentEl = buttonEl.closest('.coupon-item');
-                if (parentEl) {
-                    parentEl.classList.add('claimed');
-                    parentEl.innerHTML = `
-                        <span class="coupon-code">${escapeHtml(couponCode)}</span>
-                        <div class="claimed-info">
-                            <span class="claimed-user"><i class="fa-solid fa-user-check"></i> ${escapeHtml(user)}</span>
-                            <span class="claimed-time"><i class="fa-solid fa-clock"></i> ${escapeHtml(dataRes.claimedAt || 'Đã nhận')}</span>
-                        </div>
-                    `;
+                if (parentEl.isConnected) {
+                    const timeEl = parentEl.querySelector('.claimed-time');
+                    if (timeEl) timeEl.innerHTML = `<i class="fa-solid fa-clock"></i> ${escapeHtml(claimedAt)}`;
                 }
+                showToast(`Nhận mã thành công: ${couponCode}`, 'success');
+                delete parentEl.dataset.pending;
 
-                localData = localData.map(item => {
-                    if (item.coupon === couponCode) {
-                        item.claimedBy = user;
-                        item.claimedAt = dataRes.claimedAt || '';
-                    }
-                    return item;
-                });
-
-                localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({ coupons: localData }));
-                updateAdminDashboard();
+                // Việc nặng (ghi cache + dựng lại dashboard) làm sau, không chặn giao diện
+                setTimeout(() => {
+                    localStorage.setItem("CACHED_COUPONS_DATA", JSON.stringify({ coupons: localData }));
+                    updateAdminDashboard();
+                }, 0);
 
             } else {
-                // Mã đã bị người khác nhận trước, hoặc lỗi khác từ server
-                showToast(dataRes.message || "Không thể nhận mã, vui lòng thử lại!", "error");
-                buttonEl.disabled = false;
-                buttonEl.innerHTML = originalHtml;
+                // Mã đã bị người khác nhận trước, hoặc lỗi khác từ server -> hoàn tác
+                rollback();
+                showToast((dataRes.message || "Không thể nhận mã, vui lòng thử lại!") + " KHÔNG dùng mã vừa sao chép.", "error");
                 await refreshData(false); // đồng bộ lại để phản ánh đúng trạng thái thật
             }
         } catch (err) {
             console.error("Lỗi khi nhận mã:", err);
-            showToast("Lỗi kết nối, vui lòng thử lại!", "error");
-            buttonEl.disabled = false;
-            buttonEl.innerHTML = originalHtml;
+            rollback();
+            showToast("Lỗi kết nối, chưa nhận được mã. KHÔNG dùng mã vừa sao chép!", "error");
+            await refreshData(false); // lỡ server đã ghi thành công thì dữ liệu thật sẽ hiện lại
         }
     }
 
